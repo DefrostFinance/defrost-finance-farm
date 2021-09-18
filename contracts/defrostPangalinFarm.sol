@@ -340,6 +340,8 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         address extStakeReward = IPangalinManager(extFarmAddr).stakes(pool.lpToken);
         require(extStakeReward != address(0));
 
+        IERC20(pool.lpToken).approve(extStakeReward,~uint256(0));
+
         pool.extFarmInfo.extFarmAddr = extFarmAddr;
         pool.extFarmInfo.rewardToken = rewardToken;
 
@@ -391,13 +393,17 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         address extstakeReward = IPangalinManager(pool.extFarmInfo.extFarmAddr).stakes(pool.lpToken);
 
         if(pool.extFarmInfo.extEnableDeposit){
-            uint256 oldRewarad = IERC20(pool.extFarmInfo.rewardToken).balanceOf(address(this));
+            uint256 oldReward = IERC20(pool.extFarmInfo.rewardToken).balanceOf(address(this));
             uint256 oldTotalDeposit = pool.currentSupply.sub(_amount);
             //deposit
             IPangalinFarm(extstakeReward).stake(_amount);
-
+            IPangalinFarm(extstakeReward).getReward();
             uint256 deltaReward = IERC20(pool.extFarmInfo.rewardToken).balanceOf(address(this));
-            deltaReward = deltaReward.sub(oldRewarad);
+            if(deltaReward>oldReward) {
+                deltaReward = deltaReward.sub(oldReward);
+            } else {
+                deltaReward = 0;
+            }
 
             if(oldTotalDeposit > 0 && deltaReward > 0){
                 pool.extFarmInfo.extRewardPerShare = deltaReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
@@ -434,9 +440,17 @@ contract defrostPangalinFarm is defrostPangalinStorage {
 
             uint256 oldTotalDeposit = pool.currentSupply;
             address extstakeReward = IPangalinManager(pool.extFarmInfo.extFarmAddr).stakes(pool.lpToken);
-            IPangalinFarm(extstakeReward).withdraw(_amount);
+            IPangalinFarm(extstakeReward).getReward();
 
-            uint256 deltaReward = IERC20(pool.extFarmInfo.rewardToken).balanceOf(address(this)).sub(oldExtRewarad);
+            if(_amount>0)  {
+                IPangalinFarm(extstakeReward).withdraw(_amount);
+            }
+
+            uint256 deltaReward = IERC20(pool.extFarmInfo.rewardToken).balanceOf(address(this));
+            if(deltaReward>oldExtRewarad) {
+                deltaReward = deltaReward.sub(oldExtRewarad);
+            }
+
             if(oldTotalDeposit > 0 && deltaReward > 0)
                 pool.extFarmInfo.extRewardPerShare = deltaReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
             
