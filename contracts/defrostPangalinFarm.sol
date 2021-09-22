@@ -315,7 +315,7 @@ contract defrostPangalinFarm is defrostPangalinStorage {
                 pool.extFarmInfo.extEnableClaim = true;
             }else{
                 IERC20(pool.lpToken).approve(extstakeReward,0);
-                uint256 amount = IPangalinFarm(extstakeReward).balanceOf(address(this));
+                uint256 amount = IPangalinFarm(extstakeReward).earned(address(this));
                 if(amount > 0){
                     IPangalinFarm(extstakeReward).getReward();
                     IPangalinFarm(extstakeReward).withdraw(amount);
