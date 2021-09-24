@@ -31,12 +31,12 @@ interface IChef {
     function deposit(uint256 _pid, uint256 _amount) external;
     function emergencyWithdraw(uint256 _pid) external;
     function getMultiplier(uint256 _from, uint256 _to) external view returns (uint256);
-    function pendingWasp(uint256 _pid, address _user)  external view returns (uint256);
+    function pendingJoe(uint256 _pid, address _user)  external view returns (uint256);
 
-    function wasp() external view returns (address);
-    function waspPerBlock() external view returns (uint256);
+    function joe() external view returns (address);
+    function joePerBlock() external view returns (uint256);
 
-    function poolInfo(uint256) external  view returns ( address lpToken, uint256 allocPoint, uint256 lastRewardBlock, uint256 accWaspPerShare);
+    function poolInfo(uint256) external  view returns ( address lpToken, uint256 allocPoint, uint256 lastRewardTime, uint256 accJoePerShare);
     function poolLength() external view returns (uint256);
     function totalAllocPoint() external view returns (uint256);
     function userInfo(uint256, address) external view returns (uint256 amount, uint256 rewardDebt);
@@ -265,7 +265,7 @@ contract deFrostFarm is deFrostFarmStorage {
 
         uint256 allUnClaimedExtReward = totalUnclaimedExtFarmReward(pool.extFarmInfo.extFarmAddr);
 
-        uint256 extRewardCurrentBalance = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this));
+        uint256 extRewardCurrentBalance = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
 
         uint256 maxDistribute = extRewardCurrentBalance.sub(allUnClaimedExtReward);
 
@@ -275,9 +275,14 @@ contract deFrostFarm is deFrostFarmStorage {
     }
 
     function getExtFarmRewardRate(IChef chef,IERC20 lpToken, uint256 extPid) internal view returns(uint256 rate){
-        uint256 multiplier = chef.getMultiplier(block.number-1, block.number);
-        uint256 extRewardPerBlock = chef.waspPerBlock();
-        (,uint256 allocPoint,,) = chef.poolInfo(extPid);
+//        uint256 multiplier = chef.getMultiplier(block.number-1, block.number);
+
+        uint256 extRewardPerBlock = chef.joePerBlock();
+
+        (,uint256 allocPoint,uint256 lastRewardTimestamp,) = chef.poolInfo(extPid);
+        //changed according joe
+        uint256 multiplier = block.timestamp.sub(lastRewardTimestamp);
+
         uint256 totalAllocPoint = chef.totalAllocPoint();
         uint256 totalSupply = lpToken.balanceOf(address(chef));
 
@@ -301,12 +306,12 @@ contract deFrostFarm is deFrostFarmStorage {
     function allPendingReward(uint256 _pid,address _user) public view returns(uint256,uint256,uint256){
         uint256 depositAmount;
         uint256 deFrostReward;
-        uint256 waspReward;
+        uint256 joeReward;
         
        (depositAmount, deFrostReward) = pendingDefrostReward(_pid,_user);
-        waspReward = pendingExtReward(_pid,_user);
+        joeReward = pendingExtReward(_pid,_user);
         
-        return (depositAmount, deFrostReward, waspReward);
+        return (depositAmount, deFrostReward, joeReward);
     }
 
     function enableDoubleFarming(uint256 _pid, bool enable) public onlyOperator(1){
@@ -316,7 +321,7 @@ contract deFrostFarm is deFrostFarmStorage {
         require(pool.extFarmInfo.extFarmAddr != address(0x0),"pool not supports double farming yet");
         if(pool.extFarmInfo.extEnableDeposit != enable){
 
-            uint256 oldWaspRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
 
             if(enable){
                 IERC20(pool.lpToken).approve(pool.extFarmInfo.extFarmAddr,0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
@@ -335,9 +340,9 @@ contract deFrostFarm is deFrostFarmStorage {
             }
 
             if(pool.currentSupply > 0){
-                uint256 deltaWaspReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this)).sub(oldWaspRewarad);
+                uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this)).sub(oldJoeRewarad);
 
-                pool.extFarmInfo.extRewardPerShare = deltaWaspReward.mul(1e12).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
             }
 
             pool.extFarmInfo.extEnableDeposit = enable;
@@ -392,13 +397,13 @@ contract deFrostFarm is deFrostFarmStorage {
         uint256 extRewardPerShare = pool.extFarmInfo.extRewardPerShare;
 
         if(pool.extFarmInfo.extEnableDeposit){
-            uint256 totalPendingWasp = IChef(pool.extFarmInfo.extFarmAddr).pendingWasp(pool.extFarmInfo.extPid,address(this));
-            extRewardPerShare = totalPendingWasp.mul(1e12).div(pool.currentSupply).add(extRewardPerShare);
+            uint256 totalPendingJoe = IChef(pool.extFarmInfo.extFarmAddr).pendingJoe(pool.extFarmInfo.extPid,address(this));
+            extRewardPerShare = totalPendingJoe.mul(1e12).div(pool.currentSupply).add(extRewardPerShare);
         }
 
-        uint256 userPendingWasp = user.amount.mul(extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+        uint256 userPendingJoe = user.amount.mul(extRewardPerShare).div(1e12).sub(user.extRewardDebt);
 
-        return userPendingWasp;
+        return userPendingJoe;
     }
 
     function depositLPToChef(uint256 _pid,uint256 _amount) internal {
@@ -411,26 +416,26 @@ contract deFrostFarm is deFrostFarmStorage {
 
         if(pool.extFarmInfo.extEnableDeposit){
             
-            uint256 oldWaspRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
             uint256 oldTotalDeposit = pool.currentSupply.sub(_amount);
             
             IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid, _amount);
 
-            uint256 deltaWaspReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this));
-            deltaWaspReward = deltaWaspReward.sub(oldWaspRewarad);
+            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+            deltaJoeReward = deltaJoeReward.sub(oldJoeRewarad);
 
-            if(oldTotalDeposit > 0 && deltaWaspReward > 0){
-                pool.extFarmInfo.extRewardPerShare = deltaWaspReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
+            if(oldTotalDeposit > 0 && deltaJoeReward > 0){
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
             }
 
         }
 
         if(pool.extFarmInfo.extEnableClaim) {
-            uint256 transferWaspAmount = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+            uint256 transferJoeAmount = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
             
-            if(transferWaspAmount > 0){
-                address WaspToken = IChef(pool.extFarmInfo.extFarmAddr).wasp();
-                IERC20(WaspToken).safeTransfer(msg.sender,transferWaspAmount);
+            if(transferJoeAmount > 0){
+                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).joe();
+                IERC20(JoeToken).safeTransfer(msg.sender,transferJoeAmount);
             }
         }
 
@@ -451,23 +456,23 @@ contract deFrostFarm is deFrostFarmStorage {
             
             require(user.amount >= _amount,"withdraw too much lpToken");
 
-            uint256 oldWaspRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
             uint256 oldTotalDeposit = pool.currentSupply;
             
             IChef(pool.extFarmInfo.extFarmAddr).withdraw(pool.extFarmInfo.extPid, _amount);
 
-            uint256 deltaWaspReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).wasp()).balanceOf(address(this)).sub(oldWaspRewarad);
-            if(oldTotalDeposit > 0 && deltaWaspReward > 0)
-                pool.extFarmInfo.extRewardPerShare = deltaWaspReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
+            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this)).sub(oldJoeRewarad);
+            if(oldTotalDeposit > 0 && deltaJoeReward > 0)
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
             
         }
 
         if(pool.extFarmInfo.extEnableClaim) {
-            uint256 transferWaspAmount = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+            uint256 transferJoeAmount = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
 
-            if(transferWaspAmount > 0){
-                address waspToken = IChef(pool.extFarmInfo.extFarmAddr).wasp();
-                IERC20(waspToken).safeTransfer(msg.sender, transferWaspAmount);
+            if(transferJoeAmount > 0){
+                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).joe();
+                IERC20(JoeToken).safeTransfer(msg.sender, transferJoeAmount);
             }
         }
         
@@ -611,19 +616,19 @@ contract deFrostFarm is deFrostFarmStorage {
         require(_to != address(0), "_to == 0");
         require(extFarmAddr != address(0), "extFarmAddr == 0");
 
-        IERC20 waspToken = IERC20(IChef(extFarmAddr).wasp());
+        IERC20 joeToken = IERC20(IChef(extFarmAddr).joe());
 
-        uint256 waspBalance = waspToken.balanceOf(address(this));
+        uint256 joeBalance = joeToken.balanceOf(address(this));
 
         uint256 totalUnclaimedReward = totalUnclaimedExtFarmReward(extFarmAddr);
 
-        require(totalUnclaimedReward <= waspBalance, "extreward shortage");
+        require(totalUnclaimedReward <= joeBalance, "extreward shortage");
 
-        uint256 quitBalance = waspBalance.sub(totalUnclaimedReward);
+        uint256 quitBalance = joeBalance.sub(totalUnclaimedReward);
 
-        waspToken.safeTransfer(_to, quitBalance);
+        joeToken.safeTransfer(_to, quitBalance);
 
-        emit QuitExtReward(extFarmAddr,address(waspToken),_to, quitBalance);
+        emit QuitExtReward(extFarmAddr,address(joeToken),_to, quitBalance);
     }
 
     function getBackLeftRewardToken(address _to) public onlyOperator(0) validCall {
