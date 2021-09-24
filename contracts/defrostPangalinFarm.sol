@@ -602,11 +602,11 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         emit QuitDefrostReward(_to, rewardTokenBal);
     }
 
-    function quitExtFarm(address rewardToken,address extFarmAddr,address _to) public onlyOperator(0) validCall {
+    function quitExtFarm(address extRewardToken,address extFarmAddr,address _to) public onlyOperator(0) validCall {
         require(_to != address(0), "_to == 0");
-        require(rewardToken != address(0), "extFarmAddr == 0");
+        require(extRewardToken != address(0), "extFarmAddr == 0");
 
-        uint256 rewardBalance = IERC20(rewardToken).balanceOf(address(this));
+        uint256 rewardBalance = IERC20(extRewardToken).balanceOf(address(this));
 
         uint256 totalUnclaimedReward = totalUnclaimedExtFarmReward(extFarmAddr);
 
@@ -614,7 +614,7 @@ contract defrostPangalinFarm is defrostPangalinStorage {
 
         uint256 quitBalance = rewardBalance.sub(totalUnclaimedReward);
 
-        IERC20(rewardToken).safeTransfer(_to, quitBalance);
+        IERC20(extRewardToken).safeTransfer(_to, quitBalance);
 
         emit QuitExtReward(rewardToken,address(rewardToken),_to, quitBalance);
     }
