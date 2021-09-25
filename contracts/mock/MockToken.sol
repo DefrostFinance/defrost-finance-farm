@@ -6,7 +6,7 @@ import "./openzeppelin/contracts/ownership/Ownable.sol";
 
 
 // WaspToken
-contract WaspToken is ERC20, Ownable {
+contract MockToken is ERC20, Ownable {
     string public name;
     uint256 public decimal;
     constructor(string memory _name,uint256 _decimal) public {
