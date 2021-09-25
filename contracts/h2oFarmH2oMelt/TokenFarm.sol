@@ -13,6 +13,8 @@ import "../Address.sol";
 contract TokenFarm is Halt,TokenFarmData {
     using SafeMath for uint256;
 
+    event RewardPaid(address rewardToken,address indexed user, uint256 reward);
+
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
@@ -33,21 +35,13 @@ contract TokenFarm is Halt,TokenFarmData {
     }
 
     function setMineRate(uint256 _reward,uint256 _duration) public onlyOwner updateReward(address(0)){
-
-        require(_duration>0);
-        //token number per seconds
         rewardRate = _reward.div(_duration);
-         rewardPerduration = _reward;
+        rewardPerduration = _reward;
         duration = _duration;
-
     }   
 
 
     function setPeriodFinish(uint256 startime,uint256 endtime) public onlyOwner updateReward(address(0)) {
-        //the setting time must pass timebeing
-        require(startime >=now);
-        require(endtime > startTime);
-        
         //set new finish time
         lastUpdateTime = startime;
         periodFinish = endtime;
@@ -61,8 +55,8 @@ contract TokenFarm is Halt,TokenFarmData {
     function getbackLeftMiningToken(address reciever)  public
         onlyOwner
     {
-        uint256 bal =  IERC20(rewardToken).balanceOf(address(this));
-        IERC20(rewardToken).transfer(reciever,bal);
+        uint256 bal =  IERC20(rewardToken).balanceOf(manager);
+        IERC20(rewardToken).transferFrom(manager,reciever,bal);
     }
 
 //////////////////////////public function/////////////////////////////////    
@@ -73,7 +67,7 @@ contract TokenFarm is Halt,TokenFarmData {
          uint256 timestamp = block.timestamp>startTime?block.timestamp:startTime;
 
          //get min
-         return timestamp<periodFinish?timestamp:periodFinish;
+         return (timestamp<periodFinish?timestamp:periodFinish);
      }
 
     function rewardPerToken() public view returns(uint256) {
@@ -100,10 +94,13 @@ contract TokenFarm is Halt,TokenFarmData {
         uint256 reward = earned(account);
         if (reward > 0) {
             rewards[account] = 0;
-            uint256 preBalance = IERC20(rewardToken).balanceOf(address(this));
-            IERC20(rewardToken).transfer(account, reward);
-            uint256 afterBalance = IERC20(rewardToken).balanceOf(address(this));
+            uint256 preBalance = IERC20(rewardToken).balanceOf(address(manager));
+
+            IERC20(rewardToken).transferFrom(manager,account, reward);
+
+            uint256 afterBalance = IERC20(rewardToken).balanceOf(address(manager));
             require(preBalance - afterBalance==reward,"phx award transfer error!");
+            emit RewardPaid(rewardToken,account, reward);
         }
     }
 
@@ -117,17 +114,8 @@ contract TokenFarm is Halt,TokenFarmData {
         getReward(account);
     }
 
-    /**
-     * @return Total number of distribution tokens balance.
-     */
-    function distributionBalance() public view returns (uint256) {
-        return IERC20(rewardToken).balanceOf(address(this));
-    }    
-
-
     function getMineInfo() public view returns (uint256,uint256) {
         return (rewardPerduration,duration);
     }
-
 
 }

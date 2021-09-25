@@ -11,32 +11,46 @@ import "./TokenFarm.sol";
 import "./LPTokenWrapper.sol";
 
 contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,ReentrancyGuard{
+
+    uint256 constant public REWARD_NUM = 2;
+
     address[] public rewardTokens;
     mapping(address=>TokenFarm) public tokenFarms;
 
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
-    event RewardPaid(address indexed user, uint256 reward);
-    event HisReward(address indexed user, uint256 indexed reward,uint256 indexed idx);
 
     constructor(address _multiSignature,address _stakeToken,address[] memory _rewardTokens)
         multiSignatureClient(_multiSignature)
         public
     {
+        require(_rewardTokens.length==REWARD_NUM);
+
+        require(_multiSignature != address(0));
+        require(_stakeToken != address(0));
+
         stakeToken = _stakeToken;
         for(uint256 i=0;i<_rewardTokens.length;i++) {
             rewardTokens.push(_rewardTokens[i]);
             tokenFarms[_rewardTokens[i]] = new TokenFarm(address(this),_rewardTokens[i]);
+            IERC20(_rewardTokens[i]).approve(address(tokenFarms[_rewardTokens[i]]),0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
         }
     }
 
-
     function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public onlyOwner{
+        require(_pid<REWARD_NUM);
+        require(_reward>0);
+        require(_duration>0);
+
         tokenFarms[rewardTokens[_pid]].setMineRate(_reward,_duration);
     }
 //
-    function setPeriodFinish(uint256 _pid,uint256 startime,uint256 endtime)public onlyOwner {
-         tokenFarms[rewardTokens[_pid]].setPeriodFinish(startime,endtime);
+    function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public onlyOwner {
+         require(_pid<REWARD_NUM);
+         require(_startime>now);
+         require(_endtime>_startime);
+
+         tokenFarms[rewardTokens[_pid]].setPeriodFinish(_startime,_endtime);
     }
 
     function getbackLeftMiningToken(uint256 _pid,address reciever)  public
@@ -60,28 +74,14 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
     function totalRewards(uint256 _pid,address account) public view returns(uint256) {
         return tokenFarms[rewardTokens[_pid]].totalRewards(account);
     }
-//
-    function stake(uint256 amount,bytes memory data) public notHalted nonReentrant {
-        super.stake(amount);
-        for(uint256 i=0;i<rewardTokens.length;i++) {
-            tokenFarms[rewardTokens[i]].stake(msg.sender);
-        }
-        emit Staked(msg.sender, amount);
-    }
-
-    function unstake(uint256 amount,bytes memory data) public notHalted nonReentrant {
-        require(amount > 0, "Cannot withdraw 0");
-        for(uint256 i=0;i<rewardTokens.length;i++) {
-            tokenFarms[rewardTokens[i]].unstake(msg.sender);
-        }
-        emit Withdrawn(msg.sender, amount);
-    }
 
     function exit() public notHalted nonReentrant {
         super.unstake(balanceOf(msg.sender));
+
         for(uint256 i=0;i<rewardTokens.length;i++) {
             tokenFarms[rewardTokens[i]].exit(msg.sender);
         }
+
     }
 
     function getReward() public notHalted nonReentrant {
@@ -90,20 +90,6 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         }
     }
 
-//    /**
-//     * @return Total number of distribution tokens balance.
-//     */
-    function distributionBalance() public view returns (uint256,uint256) {
-        if(rewardTokens.length>=2) {
-            uint256 balance1 =  tokenFarms[rewardTokens[0]].distributionBalance();
-            uint256 balance2 =  tokenFarms[rewardTokens[1]].distributionBalance();
-            return (balance1,balance2);
-        } else {
-            return (0,0);
-        }
-
-    }
-//
 //    /**
 //     * @param addr The user to look up staking information for.
 //     * @return The number of staking tokens deposited for addr.
@@ -115,16 +101,24 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
 
 //    ////////////////////////////compitable with previous interface for UI///////////////////////////////////////////////////////////
     function deposit(uint256 _pid, uint256 _amount)  public payable {
-        bytes memory data = new bytes(1);
-        stake(_amount,data);
+        stake(_amount);
+
+        for(uint256 i=0;i<rewardTokens.length;i++) {
+            tokenFarms[rewardTokens[i]].stake(msg.sender);
+        }
+
+        emit Staked(msg.sender, _amount);
     }
-//
+
     function withdraw(uint256 _pid, uint256 _amount) public payable{
         if(_amount==0) {
             getReward();
         }else {
-            bytes memory data = new bytes(1);
-            unstake(_amount,data);
+            unstake(_amount);
+            for(uint256 i=0;i<rewardTokens.length;i++) {
+                tokenFarms[rewardTokens[i]].unstake(msg.sender);
+            }
+            emit Withdrawn(msg.sender, _amount);
         }
     }
 
