@@ -30,7 +30,7 @@ interface IDecimals {
 interface IChef {
     function deposit(uint256 _pid, uint256 _amount) external;
     function emergencyWithdraw(uint256 _pid) external;
-    function getMultiplier(uint256 _from, uint256 _to) external view returns (uint256);
+   // function getMultiplier(uint256 _from, uint256 _to) external view returns (uint256);
     function pendingJoe(uint256 _pid, address _user)  external view returns (uint256);
 
     function joe() external view returns (address);
