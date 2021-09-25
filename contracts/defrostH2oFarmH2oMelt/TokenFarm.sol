@@ -84,12 +84,6 @@ contract TokenFarm is Halt,TokenFarmData {
         return IERC20(manager).balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
      }
 
-    //keep same name with old version
-    function totalRewards(address account) public view returns(uint256) {
-        return earned(account);
-    }
-
-
     function getReward(address account) public updateReward(account) onlyOwner {
         uint256 reward = earned(account);
         if (reward > 0) {
@@ -105,6 +99,7 @@ contract TokenFarm is Halt,TokenFarmData {
     }
 
     function stake(address account) public updateReward(account) onlyOwner {
+         require(now>startTime);
     }
 
     function unstake(address account) public updateReward(account) onlyOwner {

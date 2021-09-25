@@ -70,9 +70,17 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         return tokenFarms[rewardTokens[_pid]].earned(account);
     }
 
-//    //keep same name with old version
-    function totalRewards(uint256 _pid,address account) public view returns(uint256) {
-        return tokenFarms[rewardTokens[_pid]].totalRewards(account);
+
+    function getMineInfo(uint256 _pid) public view returns (uint256,uint256) {
+        return tokenFarms[rewardTokens[_pid]].getMineInfo();
+    }
+
+    function allPendingReward(uint256 _pid,address _user) public view returns(uint256){
+        return earned(_pid,_user);
+    }
+
+    function totalStaked() public view returns (uint256){
+        return super.totalSupply();
     }
 
     function exit() public notHalted nonReentrant {
@@ -99,8 +107,8 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
     }
 
 
-//    ////////////////////////////compitable with previous interface for UI///////////////////////////////////////////////////////////
-    function deposit(uint256 _pid, uint256 _amount)  public payable {
+//////////////////////////////compitable with previous interface for UI///////////////////////////////////////////////////////////
+    function deposit(uint256 _amount)  public payable {
         stake(_amount);
 
         for(uint256 i=0;i<rewardTokens.length;i++) {
@@ -110,7 +118,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         emit Staked(msg.sender, _amount);
     }
 
-    function withdraw(uint256 _pid, uint256 _amount) public payable{
+    function withdraw(uint256 _amount) public payable{
         if(_amount==0) {
             getReward();
         }else {
@@ -122,16 +130,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         }
     }
 
-    function allPendingReward(uint256 _pid,address _user) public view returns(uint256){
-        return earned(_pid,_user);
-    }
 
-    function totalStaked(uint256 _pid) public view returns (uint256){
-        return super.totalSupply();
-    }
 
-    function getMineInfo(uint256 _pid) public view returns (uint256,uint256) {
-        return tokenFarms[rewardTokens[_pid]].getMineInfo();
-    }
 
 }
