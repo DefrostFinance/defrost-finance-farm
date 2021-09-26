@@ -274,7 +274,7 @@ contract('MinePoolProxy', function (accounts){
     })
 
 
-    it("[0040] check staker1 mined balance,should pass", async()=>{
+    it("[0020] check staker1 mined balance,should pass", async()=>{
         time.increaseTo(startTime+2000);
         let res = await farmproxyinst.totalStaked(0);
         console.log("totalstaked=" + res);
@@ -318,45 +318,44 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
-    /*
-          it("[0030] check staker2 mined balance,should pass", async()=>{
-            let res = await phxfarmproxyinst.totalStaked(0);
-            console.log("totalstaked=" + res);
 
-            let block = await web3.eth.getBlock("latest");
-            console.log("blocknum1=" + block.number)
+    it("[0030] check staker1 withdraw lp,should pass", async()=>{
+        time.increase(2000);
 
-            res = await phxfarmproxyinst.allPendingReward(0,staker2)
-            console.log("phxfarmproxyinst=",res[0].toString(),res[1].toString(),res[2].toString());
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
 
-            res = await phxfarmproxyinst.getPoolInfo(0)
-            console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),
-              res[3].toString(),res[4].toString(),res[5].toString(),
-              res[6].toString(),res[7].toString(),res[8].toString());
+        res = await farmproxyinst.allPendingReward(0,staker1)
+        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        let stakeAmount = res[0];
 
-            res = await phxfarmproxyinst.getMineInfo(0);
-            console.log(res[0].toString(),
-              res[1].toString(),
-              res[2].toString(),
-              res[3].toString());
 
-            let preBalance = web3.utils.fromWei(await cphx.balanceOf(staker2));
-            let wasppreBalance = web3.utils.fromWei(await wasp.balanceOf(staker2));
+        let preTeamBalance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let preTeamBalance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
 
-            res = await phxfarmproxyinst.withdraw(0,0,{from:staker2});
-            assert.equal(res.receipt.status,true);
+        let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
+        let pngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(staker1));
 
-            let afterBalance = web3.utils.fromWei(await cphx.balanceOf(staker2))
-            console.log("cfnx reward=" + (afterBalance - preBalance));
+        let lpprebalance = web3.utils.fromWei(await lp.balanceOf(staker1));
 
-            let waspafterBalance = web3.utils.fromWei(await wasp.balanceOf(staker2));
-            console.log("wasp reward=" + (waspafterBalance - wasppreBalance));
+        res = await farmproxyinst.withdraw(0,stakeAmount,{from:staker1});
+        assert.equal(res.receipt.status,true);
 
-            let lppreBalance = web3.utils.fromWei(await lp.balanceOf(staker2))
-            res = await phxfarmproxyinst.withdraw(0,stakeAmount,{from:staker2});
-            assert.equal(res.receipt.status,true);
-            let lpafterBalance = web3.utils.fromWei(await lp.balanceOf(staker2))
-            console.log("lp balance=" + (lpafterBalance - lppreBalance));
-          })
-        */
+        let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
+        console.log("staker1 melt reward=" + (afterBalance - preBalance));
+
+        let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+        console.log("team member1 melt reward=" + (afterTeam1Balance1 - preTeamBalance1));
+        console.log("team member2 melt reward=" + (afterTeam1Balance2 - preTeamBalance2));
+
+        let pngpafterBalance = web3.utils.fromWei(await pngInst.balanceOf(staker1));
+        console.log("png reward=" + (pngpafterBalance - pngpreBalance));
+
+        let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker1));
+        console.log("lp get back=" + (lpafterbalance - lpprebalance));
+
+
+    })
+
 })
