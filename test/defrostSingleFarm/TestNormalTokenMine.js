@@ -259,45 +259,42 @@ contract('MinePoolProxy', function (accounts){
 
   })
 
-/*
-  it("[0030] check staker2 mined balance,should pass", async()=>{
-    let res = await phxfarmproxyinst.totalStaked(0);
+
+  it("[0050] check staker2 mined balance,should pass", async()=>{
+    let res = await farmproxyinst.totalStaked(0);
     console.log("totalstaked=" + res);
 
     let block = await web3.eth.getBlock("latest");
     console.log("blocknum1=" + block.number)
 
-    res = await phxfarmproxyinst.allPendingReward(0,staker2)
+    res = await farmproxyinst.allPendingReward(0,staker2)
     console.log("phxfarmproxyinst=",res[0].toString(),res[1].toString(),res[2].toString());
 
-    res = await phxfarmproxyinst.getPoolInfo(0)
+    res = await farmproxyinst.getPoolInfo(0)
     console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),
       res[3].toString(),res[4].toString(),res[5].toString(),
       res[6].toString(),res[7].toString(),res[8].toString());
 
-    res = await phxfarmproxyinst.getMineInfo(0);
+    res = await farmproxyinst.getMineInfo(0);
     console.log(res[0].toString(),
-      res[1].toString(),
-      res[2].toString(),
-      res[3].toString());
+                res[1].toString(),
+                res[2].toString(),
+                res[3].toString());
 
-    let preBalance = web3.utils.fromWei(await cphx.balanceOf(staker2));
-    let wasppreBalance = web3.utils.fromWei(await wasp.balanceOf(staker2));
+    let meltpreBalance = web3.utils.fromWei(await melt.balanceOf(staker2));
+    let lppreBalance = web3.utils.fromWei(await lp.balanceOf(staker2));
 
-    res = await phxfarmproxyinst.withdraw(0,0,{from:staker2});
+    res = await farmproxyinst.allPendingReward(0,staker2);
+    let stakeAmount = res[0];
+
+    res = await farmproxyinst.withdraw(0,stakeAmount,{from:staker2});
     assert.equal(res.receipt.status,true);
 
-    let afterBalance = web3.utils.fromWei(await cphx.balanceOf(staker2))
-    console.log("cfnx reward=" + (afterBalance - preBalance));
-
-    let waspafterBalance = web3.utils.fromWei(await wasp.balanceOf(staker2));
-    console.log("wasp reward=" + (waspafterBalance - wasppreBalance));
-
-    let lppreBalance = web3.utils.fromWei(await lp.balanceOf(staker2))
-    res = await phxfarmproxyinst.withdraw(0,stakeAmount,{from:staker2});
-    assert.equal(res.receipt.status,true);
     let lpafterBalance = web3.utils.fromWei(await lp.balanceOf(staker2))
     console.log("lp balance=" + (lpafterBalance - lppreBalance));
+
+    let meltafterBalance = web3.utils.fromWei(await melt.balanceOf(staker2));
+    console.log("melt reward balance=" + (meltafterBalance - meltpreBalance));
   })
-*/
+
 })
