@@ -4,7 +4,7 @@ import "../Admin.sol";
 import "../multiSignatureClient.sol";
 import "../Operator.sol";
 
-contract defrostTeamDistributeStorage is Admin,Halt,Operator {
+contract defrostTeamDistributeStorage is Halt,Operator,multiSignatureClient {
     uint256 RATIO_DENOM = 100;
     struct userInfo {
         address user;

@@ -9,7 +9,7 @@ interface IOracle {
 }
 
 interface ITeamRewardSC {
-    function distribute(uint256 _amount) external;
+    function inputTeamReward(uint256 _amount) external;
 }
 
 interface ILpToken {
@@ -781,14 +781,12 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         (userRward,teamReward) = getUserRewardAndTeamReward(_pid,_user,_reward);
 
         if(teamReward>0) {
-            IMint(rewardToken).mint(teamRewardReciever,teamReward);
-            //safeRewardTransfer(teamRewardReciever,teamReward);
-            ITeamRewardSC(teamRewardReciever).distribute(teamReward);
+            IERC20(rewardToken).approve(teamRewardReciever,teamReward);
+            ITeamRewardSC(teamRewardReciever).inputTeamReward(teamReward);
         }
 
         if(userRward>0) {
-            IMint(rewardToken).mint(_user,userRward);
-            //safeRewardTransfer(_user,teamReward);
+            safeRewardTransfer(_user,teamReward);
         }
     }
 

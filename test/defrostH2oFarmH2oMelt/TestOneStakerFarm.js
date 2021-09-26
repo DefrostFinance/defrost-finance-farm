@@ -83,7 +83,7 @@ contract('MinePoolProxy', function (accounts){
   await h2o.mint(staker2,VAL_1M);
 
 /////////////////////////////reward token///////////////////////////////////////////
-  melt = await RewardMeltToken.new("melt token","melt",18,mulSiginst.address);
+  melt = await RewardMeltToken.new("melt token","melt",18,mulSiginst.address,accounts[0],accounts[1],accounts[2]);
 
 //set phxfarm///////////////////////////////////////////////////////////
   farminst = await MinePool.new(mulSiginst.address,h2o.address,[h2o.address,melt.address]);
@@ -91,7 +91,7 @@ contract('MinePoolProxy', function (accounts){
 
   farmproxyinst = farminst;
     //set operator 0
-  await farmproxyinst.setOperator(0,operator0);
+  await farmproxyinst.setOperator(0,accounts[9]);
   await farmproxyinst.setOperator(1,operator1);
 
 
@@ -114,33 +114,17 @@ contract('MinePoolProxy', function (accounts){
   res = await farminst.setPeriodFinish(1,startTime,endTime);
   assert.equal(res.receipt.status,true);
 
-////////////////////////set farmsc as admin to enable mint melt///////////////
-  console.log("set farmsc as admin to enable mint melt");
-
-  let msgData = melt.contract.methods.addAdmin(accounts[1]).encodeABI();
-  let hash = await utils.createApplication(mulSiginst,accounts[9],melt.address,0,msgData);
-
-  let index = await mulSiginst.getApplicationCount(hash);
-  index = index.toNumber()-1;
-  console.log(index);
-
-  res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
-  assert.equal(res.receipt.status,true);
-
-  res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
-  assert.equal(res.receipt.status,true);
-
-  res = await utils.testSigViolation("multiSig addAdmin: This tx is aprroved",async function(){
-          await melt.addAdmin(accounts[1],{from:accounts[9]});
-    });
-  assert.equal(res,true,"should return true");
 
   ////////////////////////////////////////////////////////////////////////////////////////////
-  res = await melt.mint(farmproxyinst.address,VAL_10M,{from:accounts[1]});
+  res = await melt.setOperator(0,accounts[0]);
+  assert.equal(res.receipt.status,true);
+
+  res = await melt.transfer(farmproxyinst.address,VAL_10M,{from:accounts[0]});
   assert.equal(res.receipt.status,true);
 
   res = await h2o.mint(farmproxyinst.address,VAL_10M);
   assert.equal(res.receipt.status,true);
+
   })
 
   it("[0010] stake in,should pass", async()=>{
@@ -200,5 +184,80 @@ contract('MinePoolProxy', function (accounts){
       console.log("staker1 melt reward=" + (h2oafterBalance - h2opreBalance));
 
   })
+
+
+    it("[0030] stake out,should pass", async()=>{
+        console.log("\n\n");
+        let preLpBlance = await h2o.balanceOf(staker1);
+        console.log("preLpBlance=" + preLpBlance);
+
+        let preStakeBalance = await farmproxyinst.totalStakedFor(staker1);
+        console.log("before mine balance = " + preStakeBalance);
+
+        let res = await farmproxyinst.withdraw(preStakeBalance,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let afterStakeBalance = await farmproxyinst.totalStakedFor(staker1);
+
+        console.log("after mine balance = " + afterStakeBalance);
+
+        let diff = web3.utils.fromWei(preStakeBalance) - web3.utils.fromWei(afterStakeBalance);
+        console.log("stake out balance = " + diff);
+
+        let afterLpBlance = await h2o.balanceOf(staker1);
+        console.log("afterLpBlance=" + afterLpBlance);
+        let lpdiff = web3.utils.fromWei(afterLpBlance) - web3.utils.fromWei(preLpBlance);
+
+        assert.equal(diff,lpdiff);
+    })
+
+
+    it("[0050] get back left mining token,should pass", async()=>{
+
+        let msgData = farmproxyinst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
+        let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
+
+        let res = await utils.testSigViolation("multiSig setUserPhxUnlockInfo: This tx is not aprroved",async function(){
+            await farmproxyinst.getbackLeftMiningToken(staker1,{from:accounts[9]});
+        });
+        assert.equal(res,false,"should return false")
+
+        let index = await mulSiginst.getApplicationCount(hash);
+        index = index.toNumber()-1;
+        console.log(index);
+
+        await mulSiginst.signApplication(hash,index,{from:accounts[7]})
+        await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+
+
+        console.log("\n\n");
+        let h2opreMineBlance = await h2o.balanceOf(staker1);
+        console.log("h2o preMineBlance=" + h2opreMineBlance);
+
+        let meltpreRecieverBalance = await melt.balanceOf(staker1);
+        console.log("melt prebalance = " + meltpreRecieverBalance);
+
+        // res = await proxy.getbackLeftMiningToken(staker1,{from:accounts[9]});
+        // assert.equal(res.receipt.status,true);
+        res = await utils.testSigViolation("multiSig getback reward token: This tx is aprroved",async function(){
+            await farmproxyinst.getbackLeftMiningToken(staker1,{from:accounts[9]});
+        });
+        assert.equal(res,true,"should return false")
+
+        let h2oafterRecieverBalance = await  h2o.balanceOf(staker1);
+        console.log("after h2o mine balance = " + h2oafterRecieverBalance);
+
+        let meltafterRecieverBalance = await  melt.balanceOf(staker1);
+        console.log("after melt mine balance = " + meltafterRecieverBalance);
+
+        let diff = web3.utils.fromWei(h2oafterRecieverBalance) - web3.utils.fromWei(h2opreMineBlance);
+        console.log("h2o getback balance = " + diff);
+
+        diff = web3.utils.fromWei(meltafterRecieverBalance) - web3.utils.fromWei(meltpreRecieverBalance);
+        console.log("melt getback balance = " + diff);
+
+    })
+
+
 
 })

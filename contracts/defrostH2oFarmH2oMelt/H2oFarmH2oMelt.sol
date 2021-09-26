@@ -53,11 +53,14 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
          tokenFarms[rewardTokens[_pid]].setPeriodFinish(_startime,_endtime);
     }
 
-    function getbackLeftMiningToken(uint256 _pid,address reciever)  public
+    function getbackLeftMiningToken(address reciever)  public
         onlyOperator(0)
         validCall
     {
-        tokenFarms[rewardTokens[_pid]].getbackLeftMiningToken(reciever);
+        for(uint256 i=0;i<rewardTokens.length;i++) {
+            tokenFarms[rewardTokens[i]].getbackLeftMiningToken(reciever);
+        }
+
     }
 
 
@@ -129,8 +132,6 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
             emit Withdrawn(msg.sender, _amount);
         }
     }
-
-
 
 
 }

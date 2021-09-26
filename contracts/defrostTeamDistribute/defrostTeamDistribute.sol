@@ -96,11 +96,13 @@ contract TeamDistribute is defrostTeamDistributeStorage {
         require((balafter-balbefore)==amount,"error transfer phx,balance check failed");
     }
 
-    function distribute(uint256 _amount)
+    function inputTeamReward(uint256 _amount)
         public
-        onlyAdmin
+        inited
     {
         require(_amount>0);
+        IERC20(rewardToken).transferFrom(msg.sender,address(this),_amount);
+
         for(uint256 i=0;i<userCount;i++){
             userInfo storage info = allUserInfo[i];
             uint256 useramount = _amount.mul(info.ratio).div(RATIO_DENOM);
