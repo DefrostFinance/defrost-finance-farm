@@ -572,7 +572,7 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         address extstakeReward = IPangalinManager(pool.extFarmInfo.extFarmAddr).stakes(pool.lpToken);
         IPangalinFarm(extstakeReward).exit();
 
-        pool.extFarmInfo.extEnableDeposit = false;            
+        pool.extFarmInfo.extEnableDeposit = false;
 
         emit EmergencyWithdraw(_pid);
     }

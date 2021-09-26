@@ -258,63 +258,38 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
-    it("[0010] check parameter,should pass", async()=>{
-        let res = await farmproxyinst.getPriceTokenDecimal(usdc.address);
-        console.log(res);
-
-        res = await farmproxyinst.getLpTvlAndUserTvl(0,VAL_1M);
-        console.log(res);
-
-        res = await farmproxyinst.getTeamRewardRatio(0,staker1);
-        console.log(res.toString(10));
-
-        res = await farmproxyinst.getWhiteListIncRatio(0,staker1);
-        console.log(res.toString(10));
-
-    })
-
 
     it("[0020] check staker1 mined balance,should pass", async()=>{
-        time.increaseTo(startTime+2000);
-        let res = await farmproxyinst.totalStaked(0);
-        console.log("totalstaked=" + res);
+        time.increase(startTime+2000);
 
-        let block = await web3.eth.getBlock("latest");
-        console.log("blocknum1=" + block.number)
+        let prelpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
+        let prepngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(armproxyinst.address));
 
-        res = await farmproxyinst.allPendingReward(0,staker1)
-        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
 
-        res = await farmproxyinst.getPoolInfo(0)
-        console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),
-            res[3].toString(),res[4].toString(),res[5].toString(),
-            res[6].toString(),res[7].toString(),res[8].toString());
+        console.log("set farmsc as admin to enable mint melt");
+        let msgData = farmproxyinst.contract.methods.emergencyWithdrawExtLp(0).encodeABI();
+        let hash = await utils.createApplication(mulSiginst,accounts[9],melt.address,0,msgData);
 
-        res = await farmproxyinst.getMineInfo(0);
-        console.log(res[0].toString(),
-            res[1].toString(),
-            res[2].toString(),
-            res[3].toString());
+        let index = await mulSiginst.getApplicationCount(hash)
+        index = index.toNumber()-1;
+        console.log(index);
 
-        let preTeamBalance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
-        let preTeamBalance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
-
-        let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
-        let pngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(staker1));
-
-        res = await farmproxyinst.withdraw(0,0,{from:staker1});
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
         assert.equal(res.receipt.status,true);
 
-        let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
-        console.log("staker1 melt reward=" + (afterBalance - preBalance));
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+        assert.equal(res.receipt.status,true);
 
-        let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
-        let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
-        console.log("team member1 melt reward=" + (afterTeam1Balance1 - preTeamBalance1));
-        console.log("team member2 melt reward=" + (afterTeam1Balance2 - preTeamBalance2));
+        res = await utils.testSigViolation("multiSig emergencyWithdrawExtLp: This tx is aprroved",async function(){
+            await melt.emergencyWithdrawExtLp(farmproxyinst.address,{from:accounts[9]});
+        });
+        assert.equal(res,true,"should return true");
 
-        let pngpafterBalance = web3.utils.fromWei(await pngInst.balanceOf(staker1));
-        console.log("png reward=" + (pngpafterBalance - pngpreBalance));
+        let afterlpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
+        let afterpngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(armproxyinst.address));
+
+        console.log("png reward=" + (afterpngpreBalance - prepngpreBalance));
+        console.log("lp get back=" + (afterlpBalance - prelpBalance));
 
     })
 
