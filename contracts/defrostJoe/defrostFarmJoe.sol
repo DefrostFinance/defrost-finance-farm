@@ -688,6 +688,12 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
         fixedTeamRatio = _ratio;
     }
 
+    function setFixedWhitelistRatio(uint256 _ratio)
+       public onlyOperator(1)
+    {
+        fixedWhitelistRatio = _ratio;
+    }
+
     function setWhiteList(address[] memory _user,
                           uint256[] memory _amount)
         public onlyOperator(1)
@@ -734,16 +740,22 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
 
         uint256 usertvl;
         uint256 ratio = 0;
-        UserInfo memory user = userInfo[_pid][_user];
-        (,usertvl) = getLpTvlAndUserTvl(_pid,user.amount);
+
 
         if(whiteListLpUserInfo[_user]>0) {
-            for(uint256 i=0;i<whiteListRewardIncLevels;i++) {
-                if( usertvl>=whiteListRewardIncInfo[i].amount) {
-                    ratio = whiteListRewardIncInfo[i].incPercent;
+            if(fixedWhitelistRatio>0) {
+                return RATIO_DENOM.add(fixedWhitelistRatio);
+            } else {
+                UserInfo memory user = userInfo[_pid][_user];
+                (,usertvl) = getLpTvlAndUserTvl(_pid,user.amount);
+
+                for(uint256 i=0;i<whiteListRewardIncLevels;i++) {
+                    if( usertvl>=whiteListRewardIncInfo[i].amount) {
+                        ratio = whiteListRewardIncInfo[i].incPercent;
+                    }
                 }
-            }
-            return (RATIO_DENOM+ratio);//return 1+increase persent
+             }
+            return (RATIO_DENOM.add(ratio));//return 1+increase persent
         } else {
             return RATIO_DENOM;
         }
@@ -794,7 +806,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
         }
 
         if(userRward>0) {
-            safeRewardTransfer(_user,teamReward);
+            safeRewardTransfer(_user,userRward);
         }
     }
 

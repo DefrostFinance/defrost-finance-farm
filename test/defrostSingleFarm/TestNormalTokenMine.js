@@ -1,25 +1,23 @@
 const { time, expectEvent} = require("@openzeppelin/test-helpers");
-const PoolProxy = artifacts.require('deForestFarmProxy');
-const MinePool = artifacts.require('deFrostFarm');
+
+const MinePool = artifacts.require('defrostFarmJoe');
 
 const LpToken = artifacts.require('LpToken');
 const WethToken = artifacts.require('LpToken');
 
-const Oracle = artifacts.require('PHXOracle');
+const Oracle = artifacts.require('Oracle');
 
 const TeamDistribute = artifacts.require('TeamDistribute');
-const TeamDistributeProxy = artifacts.require('DefrostTeamDistributeProxy');
 
 const MeltToken = artifacts.require("DefrostToken");
 
-const Chef = artifacts.require("WanSwapFarm");
 const MultiSignature = artifacts.require("multiSignature");
 
 const assert = require('chai').assert;
 const Web3 = require('web3');
-const config = require("../truffle-config.js");
+
 const BN = require("bn.js");
-var utils = require('./utils.js');
+var utils = require('../utils.js');
 web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
 
 /**************************************************
@@ -27,6 +25,7 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
 contract('MinePoolProxy', function (accounts){
+
   let rewardOneDay = web3.utils.toWei('5000', 'ether');
   let blockSpeed = 5;
   let bocksPerDay = 3600*24/blockSpeed;
@@ -95,19 +94,17 @@ contract('MinePoolProxy', function (accounts){
 
   await lp.setReserve(usx.address,usdc.address);
 /////////////////////////////reward token///////////////////////////////////////////
-  melt = await MeltToken.new("melt token","melt",18,mulSiginst.address);
+  melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2],mulSiginst.address);
 //set phxfarm///////////////////////////////////////////////////////////
   farminst = await MinePool.new(mulSiginst.address);
   console.log("pool address:", farminst.address);
 
-  farmproxyinst = await PoolProxy.new(farminst.address,melt.address,mulSiginst.address);
-  console.log("proxy address:",farmproxyinst.address);
+  farmproxyinst = farminst;
+
     //set operator 0
   await farmproxyinst.setOperator(0,operator0);
   await farmproxyinst.setOperator(1,operator1);
 
-  farmproxyinst = await MinePool.at(farmproxyinst.address);
-  console.log("proxy address:" + farmproxyinst.address);
 
   let block = await web3.eth.getBlock("latest");
   startTime = block.timestamp + 1000;
@@ -122,62 +119,22 @@ contract('MinePoolProxy', function (accounts){
                           rewardOneDay,
                           24*3600,
                           5,{from:operator1});
+
   assert.equal(res.receipt.status,true);
 
 //  res = await farmproxyinst.setOperator(1,accounts[0]);
 //  assert.equal(res.receipt.status,true);
 /////////////////////////////////team reward sc set////////////////////////////
     console.log("team reward sc set");
-    teamReward = await TeamDistribute.new(mulSiginst.address);
-    let teamProxy = await TeamDistributeProxy.new(teamReward.address,melt.address,mulSiginst.address);
-    teamReward = await TeamDistribute.at(teamProxy.address);
-    //set operator for setting
+    teamReward = await TeamDistribute.new(mulSiginst.address,melt.address);
+
     res = await teamReward.setOperator(0,accounts[0]);
     assert.equal(res.receipt.status,true);
-    //set contract to mint
-    res = await teamReward.setOperator(1,farmproxyinst.address);
-    assert.equal(res.receipt.status,true);
+
 
     res = await teamReward.setMultiUsersInfo(teammems,teammemsRatio);
     assert.equal(res.receipt.status,true);
-////////////////////////set farmsc as admin to enable mint melt///////////////
-    console.log("set farmsc as admin to enable mint melt");
-    let msgData = melt.contract.methods.addAdmin(farmproxyinst.address).encodeABI();
-    let hash = await utils.createApplication(mulSiginst,accounts[9],melt.address,0,msgData);
 
-    let index = await mulSiginst.getApplicationCount(hash)
-    index = index.toNumber()-1;
-    console.log(index);
-
-    res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
-    assert.equal(res.receipt.status,true);
-
-    res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
-    assert.equal(res.receipt.status,true);
-
-    res = await utils.testSigViolation("multiSig addAdmin: This tx is aprroved",async function(){
-          await melt.addAdmin(farmproxyinst.address,{from:accounts[9]});
-    });
-    assert.equal(res,true,"should return true");
-////////////////////////set team distribute///////////////////////////////////
-      console.log("set farmsc as admin to enable sc call distribute reward");
-      msgData = teamReward.contract.methods.addAdmin(farmproxyinst.address).encodeABI();
-      hash = await utils.createApplication(mulSiginst,accounts[9],teamReward.address,0,msgData);
-
-      index = await mulSiginst.getApplicationCount(hash)
-      index = index.toNumber()-1;
-      console.log(index);
-
-      res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
-      assert.equal(res.receipt.status,true);
-
-      res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
-      assert.equal(res.receipt.status,true);
-
-      res = await utils.testSigViolation("multiSig addAdmin: This tx is aprroved",async function() {
-          await teamReward.addAdmin(farmproxyinst.address, {from: accounts[9]});
-      });
-      assert.equal(res,true,"should return true");
 ///////////////////////////////////////////////////////////////////////////////
     //set reward,oracle,usx stable,teamreward
     res = await farmproxyinst.setDefrostAddress( melt.address,
@@ -189,8 +146,10 @@ contract('MinePoolProxy', function (accounts){
     assert.equal(res.receipt.status,true);
 
     //set whitelist ratio
-    res = await farmproxyinst.setWhiteListRewardIncRatio([500000],[200],{from:operator1});
+    //res = await farmproxyinst.setWhiteListRewardIncRatio([500000],[200],{from:operator1});
+    res = await farmproxyinst.setFixedTeamRatio(200,{from:operator1});
     assert.equal(res.receipt.status,true);
+
 
     //set whitelist
     res = await farmproxyinst.setWhiteList([staker1,staker2],[1,1],{from:operator1});
@@ -201,12 +160,19 @@ contract('MinePoolProxy', function (accounts){
     // assert.equal(res.receipt.status,true);
 
     res = await farmproxyinst.setFixedTeamRatio(10,{from:operator1});
+    assert.equal(res.receipt.status,true);
 
-    console.log("normall setting end");
 
 ///////////////////////test setting/////////////////////////////////////////////////////
-   res = await oracleinst.setPrice(usdc.address,100000000);//usdc one dollar
+    res = await oracleinst.setPrice(usdc.address,100000000);//usdc one dollar
+    assert.equal(res.receipt.status,true);
 
+    res = await melt.transfer(farmproxyinst.address,VAL_10M,{from:accounts[0]});//usdc one dollar
+    assert.equal(res.receipt.status,true);
+
+
+
+    console.log("normall setting end");
 
   })
 
@@ -262,7 +228,7 @@ contract('MinePoolProxy', function (accounts){
      console.log("blocknum1=" + block.number)
 
     res = await farmproxyinst.allPendingReward(0,staker1)
-    console.log("phxfarmproxyinst=",res[0].toString(),res[1].toString(),res[2].toString());
+    console.log("allPendingReward=",res[0].toString(),res[1].toString(),res[2].toString());
 
      res = await farmproxyinst.getPoolInfo(0)
      console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),

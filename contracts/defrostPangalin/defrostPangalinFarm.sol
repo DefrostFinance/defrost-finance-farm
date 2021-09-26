@@ -786,7 +786,7 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         }
 
         if(userRward>0) {
-            safeRewardTransfer(_user,teamReward);
+            safeRewardTransfer(_user,userRward);
         }
     }
 

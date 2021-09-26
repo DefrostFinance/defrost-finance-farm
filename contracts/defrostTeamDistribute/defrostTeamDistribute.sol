@@ -17,10 +17,11 @@ contract TeamDistribute is defrostTeamDistributeStorage {
     	  _;
     }
 
-    constructor(address _multiSignature)
+    constructor(address _multiSignature,address _rewardToken)
         multiSignatureClient(_multiSignature)
         public
     {
+        rewardToken = _rewardToken;
     }
 
     /**
