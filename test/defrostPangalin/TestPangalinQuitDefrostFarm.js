@@ -75,6 +75,7 @@ contract('MinePoolProxy', function (accounts){
     let pngStakeRewardInt;
     let pngInst;
     let avaxInst;
+    let endBlock;
 
     async function initPngDoubleFarm(){
         pngInst = await PngToken.new("png",18);
@@ -148,10 +149,10 @@ contract('MinePoolProxy', function (accounts){
         // console.log("proxy address:" + farmproxyinst.address);
 
         let block = await web3.eth.getBlock("latest");
-        startTime = block.timestamp + 1000;
+        startTime = block.timestamp + 100;
         console.log("set block time",startTime);
 
-        let endBlock = block.number + bocksPerDay*365;
+        endBlock = block.number + 300;
 
         res = await farmproxyinst.add(lp.address,
             startTime,
@@ -260,14 +261,14 @@ contract('MinePoolProxy', function (accounts){
 
 
     it("[0020] check staker1 mined balance,should pass", async()=>{
-        time.increase(startTime+2000);
 
-        let prelpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
-        let prepngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(farmproxyinst.address));
+        await utils.pause(web3,endBlock+10);
+
+        let premeltBalance = web3.utils.fromWei(await melt.balanceOf(farmproxyinst.address));
 
 
         console.log("set farmsc as admin to enable mint melt");
-        let msgData = farmproxyinst.contract.methods.emergencyWithdrawExtLp(0).encodeABI();
+        let msgData = farmproxyinst.contract.methods.quitDefrostFarm(accounts[6]).encodeABI();
         let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
 
         let index = await mulSiginst.getApplicationCount(hash)
@@ -281,15 +282,14 @@ contract('MinePoolProxy', function (accounts){
         assert.equal(res.receipt.status,true);
 
         res = await utils.testSigViolation("multiSig emergencyWithdrawExtLp: This tx is aprroved",async function(){
-            await farmproxyinst.emergencyWithdrawExtLp(0,{from:accounts[9]});
+            await farmproxyinst.quitDefrostFarm(accounts[6],{from:accounts[9]});
         });
         assert.equal(res,true,"should return true");
 
-        let afterlpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
-        let afterpngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(farmproxyinst.address));
+        let aftermeltBalance = web3.utils.fromWei(await melt.balanceOf(accounts[6]));
 
-        console.log("png reward=" + (afterpngpreBalance - prepngpreBalance));
-        console.log("lp get back=" + (afterlpBalance - prelpBalance));
+        console.log("melt reward=" + (aftermeltBalance - premeltBalance));
+
 
     })
 
