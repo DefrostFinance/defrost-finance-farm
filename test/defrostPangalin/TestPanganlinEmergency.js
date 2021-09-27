@@ -141,7 +141,7 @@ contract('MinePoolProxy', function (accounts){
         //await PoolProxy.new(farminst.address,melt.address,mulSiginst.address);
         console.log("proxy address:",farmproxyinst.address);
         //set operator 0
-        await farmproxyinst.setOperator(0,operator0);
+        await farmproxyinst.setOperator(0,accounts[9]);
         await farmproxyinst.setOperator(1,operator1);
 
         // farmproxyinst = await MinePool.at(farmproxyinst.address);
@@ -263,12 +263,12 @@ contract('MinePoolProxy', function (accounts){
         time.increase(startTime+2000);
 
         let prelpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
-        let prepngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(armproxyinst.address));
+        let prepngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(farmproxyinst.address));
 
 
         console.log("set farmsc as admin to enable mint melt");
         let msgData = farmproxyinst.contract.methods.emergencyWithdrawExtLp(0).encodeABI();
-        let hash = await utils.createApplication(mulSiginst,accounts[9],melt.address,0,msgData);
+        let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
 
         let index = await mulSiginst.getApplicationCount(hash)
         index = index.toNumber()-1;
@@ -281,19 +281,19 @@ contract('MinePoolProxy', function (accounts){
         assert.equal(res.receipt.status,true);
 
         res = await utils.testSigViolation("multiSig emergencyWithdrawExtLp: This tx is aprroved",async function(){
-            await melt.emergencyWithdrawExtLp(farmproxyinst.address,{from:accounts[9]});
+            await farmproxyinst.emergencyWithdrawExtLp(0,{from:accounts[9]});
         });
         assert.equal(res,true,"should return true");
 
         let afterlpBalance = web3.utils.fromWei(await lp.balanceOf(farmproxyinst.address));
-        let afterpngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(armproxyinst.address));
+        let afterpngpreBalance = web3.utils.fromWei(await pngInst.balanceOf(farmproxyinst.address));
 
         console.log("png reward=" + (afterpngpreBalance - prepngpreBalance));
         console.log("lp get back=" + (afterlpBalance - prelpBalance));
 
     })
 
-
+/*
     it("[0030] check staker1 withdraw lp,should pass", async()=>{
         time.increase(2000);
 
@@ -331,5 +331,5 @@ contract('MinePoolProxy', function (accounts){
         console.log("lp get back=" + (lpafterbalance - lpprebalance));
 
     })
-
+*/
 })
