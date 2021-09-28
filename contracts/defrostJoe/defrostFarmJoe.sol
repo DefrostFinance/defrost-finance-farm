@@ -23,14 +23,19 @@ interface IDecimals {
     function decimals() external view returns (uint8);
 }
 
+//uint256 pendingJoe,
+//address bonusTokenAddress,
+//string memory bonusTokenSymbol,
+//uint256 pendingBonusToken
+
 interface IChef {
     function deposit(uint256 _pid, uint256 _amount) external;
     function emergencyWithdraw(uint256 _pid) external;
    // function getMultiplier(uint256 _from, uint256 _to) external view returns (uint256);
-    function pendingJoe(uint256 _pid, address _user)  external view returns (uint256);
+    function pendingTokens(uint256 _pid, address _user)  external view returns (uint256,address,string memory,uint256);
 
     function joe() external view returns (address);
-    function joePerBlock() external view returns (uint256);
+    function joePerSec() external view returns (uint256);
 
     function poolInfo(uint256) external  view returns ( address lpToken, uint256 allocPoint, uint256 lastRewardTime, uint256 accJoePerShare);
     function poolLength() external view returns (uint256);
@@ -273,7 +278,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
     function getExtFarmRewardRate(IChef chef,IERC20 lpToken, uint256 extPid) internal view returns(uint256 rate){
 //        uint256 multiplier = chef.getMultiplier(block.number-1, block.number);
 
-        uint256 extRewardPerBlock = chef.joePerBlock();
+        uint256 extRewardPerBlock = chef.joePerSec();
 
         (,uint256 allocPoint,uint256 lastRewardTimestamp,) = chef.poolInfo(extPid);
         //changed according joe
@@ -393,7 +398,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
         uint256 extRewardPerShare = pool.extFarmInfo.extRewardPerShare;
 
         if(pool.extFarmInfo.extEnableDeposit){
-            uint256 totalPendingJoe = IChef(pool.extFarmInfo.extFarmAddr).pendingJoe(pool.extFarmInfo.extPid,address(this));
+            (uint256 totalPendingJoe,,,) = IChef(pool.extFarmInfo.extFarmAddr).pendingTokens(pool.extFarmInfo.extPid,address(this));
             extRewardPerShare = totalPendingJoe.mul(1e12).div(pool.currentSupply).add(extRewardPerShare);
         }
 
@@ -401,6 +406,10 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
 
         return userPendingJoe;
     }
+    //uint256 pendingJoe,
+    //address bonusTokenAddress,
+    //string memory bonusTokenSymbol,
+    //uint256 pendingBonusToken
 
     function depositLPToChef(uint256 _pid,uint256 _amount) internal {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
