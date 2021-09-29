@@ -307,4 +307,35 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
+
+    it("[0020] check getback reward,should pass", async()=>{
+        time.increase(2000);
+
+        let premeltpreBalance = web3.utils.fromWei(await melt.balanceOf(accounts[6]));
+
+
+        console.log("get back melt token");
+        let msgData = farmproxyinst.contract.methods.getBackLeftRewardToken(accounts[6]).encodeABI();
+        let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
+
+        let index = await mulSiginst.getApplicationCount(hash)
+        index = index.toNumber()-1;
+        console.log(index);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
+        assert.equal(res.receipt.status,true);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+        assert.equal(res.receipt.status,true);
+
+        res = await utils.testSigViolation("multiSig getBackLeftRewardToken: This tx is aprroved",async function(){
+            await farmproxyinst.getBackLeftRewardToken(accounts[6],{from:accounts[9]});
+        });
+        assert.equal(res,true,"should return true");
+
+        let aftermeltpreBalance = web3.utils.fromWei(await melt.balanceOf(accounts[6]));
+
+        console.log("melt get back=" + (aftermeltpreBalance - premeltpreBalance));
+
+    })
 })
