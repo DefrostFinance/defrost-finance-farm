@@ -356,4 +356,23 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
+    it("[0040] team withdraw reward lp,should pass", async()=>{
+        let preBalance1 = web3.utils.fromWei(await melt.balanceOf(teamMember1));
+        let preBalance2 = web3.utils.fromWei(await melt.balanceOf(teamMember2));
+
+        let res = await teamReward.claimReward({from:teamMember1});
+        assert.equal(res.receipt.status,true);
+
+        res = await teamReward.claimReward({from:teamMember2});
+        assert.equal(res.receipt.status,true);
+
+
+        let afterBalance1 = web3.utils.fromWei(await melt.balanceOf(teamMember1));
+        let afterBalance2 = web3.utils.fromWei(await melt.balanceOf(teamMember2));
+
+        console.log("teamMember1 reward got=",afterBalance1-preBalance1);
+        console.log("teamMember2 reward got=",afterBalance2-preBalance2);
+    })
+
+
 })
