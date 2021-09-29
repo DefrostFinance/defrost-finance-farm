@@ -1,6 +1,6 @@
 const { time, expectEvent} = require("@openzeppelin/test-helpers");
-const PoolProxy = artifacts.require('defrostPangalinProxy');
-const MinePool = artifacts.require('defrostPangalinFarm');
+const PoolProxy = artifacts.require('deforestFarmJoeProxy');
+const MinePool = artifacts.require('defrostFarmJoe');
 
 const LpToken = artifacts.require('LpToken');
 const WethToken = artifacts.require('LpToken');
@@ -13,10 +13,8 @@ const TeamDistributeProxy = artifacts.require('DefrostTeamDistributeProxy');
 const MeltToken = artifacts.require("DefrostToken");
 const MultiSignature = artifacts.require("multiSignature");
 
-const PngManager = artifacts.require("LiquidityPoolManager");
-const StakingRewards = artifacts.require("StakingRewards");
-const PngToken = artifacts.require('MockToken');
-const AvaxToken = artifacts.require('MockToken');
+const JoeFarmChef = artifacts.require("MasterChefJoeV2");
+const JoeToken = artifacts.require('MockToken');
 
 const assert = require('chai').assert;
 const Web3 = require('web3');
@@ -44,7 +42,7 @@ contract('MinePoolProxy', function (accounts){
     let teammems = [teamMember1,teamMember2];
     let teammemsRatio = [20,80];
 
-    let operator0 = accounts[0];
+    let operator0 = accounts[9];
     let operator1 = accounts[1]
 
     let disSpeed1 = web3.utils.toWei('1', 'ether');
@@ -71,38 +69,39 @@ contract('MinePoolProxy', function (accounts){
     let oracleinst;
     let startTime;
 
-    let pngManagerInst;
-    let pngStakeRewardInt;
-    let pngInst;
-    let avaxInst;
+    let joeFarmChefInst;
+    let joeToken;
     let endBlock;
 
     async function initPngDoubleFarm(){
-        pngInst = await PngToken.new("png",18);
-        AvaxInst = await AvaxToken.new("avax",18);
+        // constructor(
+        //     JoeToken _joe,
+        //     address _devAddr,
+        //     address _treasuryAddr,
+        //     address _investorAddr,
+        //     uint256 _joePerSec,
+        //     uint256 _startTimestamp,
+        //     uint256 _devPercent,
+        //     uint256 _treasuryPercent,
+        //     uint256 _investorPercent
+        joeToken = await JoeToken.new("Joe token",18);
 
-        pngManagerInst = await PngManager.new(AvaxInst.address,pngInst.address);
-        let res = await pngManagerInst.addWhitelistedPool(lp.address);
-        assert.equal(res.receipt.status,true);
+        joeFarmChefInst = await JoeFarmChef.new(joeToken.address,accounts[7],accounts[8],accounts[9],web3.utils.toWei("1",'ether'),startTime,0,0,0);
 
-        let pngStakeRewardAddress = await pngManagerInst.stakes(lp.address);
-        pngStakeRewardInt = await StakingRewards.at(pngStakeRewardAddress);
+        //     function add(
+        //         uint256 _allocPoint,
+        //         IERC20 _lpToken,
+        //         IRewarder _rewarder
+        // ) public onlyOwner {
 
-        res = await pngStakeRewardInt.setRewardsDuration(365*day);
-
-        assert.equal(res.receipt.status,true);
-
-        res = await pngInst.mint(pngStakeRewardInt.address,new BN(rewardOneDay).mul(new BN(500)));
-        assert.equal(res.receipt.status,true);
-
-        res = await pngStakeRewardInt.notifyRewardAmount(new BN(rewardOneDay).mul(new BN(365)));
+        let res = await joeFarmChefInst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
         assert.equal(res.receipt.status,true);
 
     }
 
     async function enablePngDoubleFarm(){
 
-        let res = await farmproxyinst.setDoubleFarming(0,pngManagerInst.address,pngInst.address,{from:operator1});
+        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefInst.address,0,{from:operator1});
         assert.equal(res.receipt.status,true);
 
         res = await farmproxyinst.enableDoubleFarming(0,true,{from:operator1});
@@ -142,7 +141,7 @@ contract('MinePoolProxy', function (accounts){
         //await PoolProxy.new(farminst.address,melt.address,mulSiginst.address);
         console.log("proxy address:",farmproxyinst.address);
         //set operator 0
-        await farmproxyinst.setOperator(0,accounts[9]);
+        await farmproxyinst.setOperator(0,operator0);
         await farmproxyinst.setOperator(1,operator1);
 
         // farmproxyinst = await MinePool.at(farmproxyinst.address);
@@ -152,7 +151,7 @@ contract('MinePoolProxy', function (accounts){
         startTime = block.timestamp + 100;
         console.log("set block time",startTime);
 
-        endBlock = block.number + 300;
+        endBlock = block.number + 200;
 
         res = await farmproxyinst.add(lp.address,
             startTime,
@@ -189,10 +188,10 @@ contract('MinePoolProxy', function (accounts){
 ///////////////////////////////////////////////////////////////////////////////
         //set reward,oracle,usx stable,teamreward
         res = await farmproxyinst.setDefrostAddress(melt.address,
-                                                    oracleinst.address,
-                                                    usx.address,
-                                                    teamReward.address,
-                                                    {from:operator1});
+            oracleinst.address,
+            usx.address,
+            teamReward.address,
+            {from:operator1});
 
         assert.equal(res.receipt.status,true);
 
@@ -228,17 +227,17 @@ contract('MinePoolProxy', function (accounts){
         res = await lp.approve(farmproxyinst.address,VAL_1M,{from:staker1});
         assert.equal(res.receipt.status,true);
 
-        // res = await lp.approve(pngStakeRewardInt.address,VAL_1M,{from:staker1});
+        // res = await lp.approve(joeStakeRewardInt.address,VAL_1M,{from:staker1});
         // assert.equal(res.receipt.status,true);
 
         time.increaseTo(startTime+1);
 
-        let preBal = await pngInst.balanceOf(farmproxyinst.address);
+        let preBal = await joeToken.balanceOf(farmproxyinst.address);
         console.log("prebalance=",preBal.toString(10));
         res = await farmproxyinst.deposit(0,VAL_1M,{from:staker1});
         assert.equal(res.receipt.status,true);
 
-        let afterBal = await pngInst.balanceOf(farmproxyinst.address);
+        let afterBal = await joeToken.balanceOf(farmproxyinst.address);
         console.log("afterbalance=",afterBal.toString(10));
 
         let mineInfo = await farmproxyinst.getMineInfo(0);
@@ -259,12 +258,28 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
+    it("[0010] check parameter,should pass", async()=>{
+        let res = await farmproxyinst.getPriceTokenDecimal(usdc.address);
+        console.log(res);
 
-    it("[0020] check staker1 mined balance,should pass", async()=>{
+        res = await farmproxyinst.getLpTvlAndUserTvl(0,VAL_1M);
+        console.log(res);
+
+        res = await farmproxyinst.getTeamRewardRatio(0,staker1);
+        console.log(res.toString(10));
+
+        res = await farmproxyinst.getWhiteListIncRatio(0,staker1);
+        console.log(res.toString(10));
+
+    })
+
+
+
+    it("[0020] check quitDefrostFarm,should pass", async()=>{
 
         await utils.pause(web3,endBlock+10);
 
-        let premeltBalance = web3.utils.fromWei(await melt.balanceOf(farmproxyinst.address));
+        let premeltBalance = web3.utils.fromWei(await melt.balanceOf(accounts[6]));
 
 
         console.log("set farmsc as admin to enable mint melt");
