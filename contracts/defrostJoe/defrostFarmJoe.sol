@@ -67,10 +67,9 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
     event GetBackLeftRewardToken(address to, uint256 amount);
 
     constructor(address _multiSignature)
-        multiSignatureClient(_multiSignature)
+       multiSignatureClient(_multiSignature)
         public
     {
-
     }
 
     function getPoolInfo(uint256 _pid) external view returns (

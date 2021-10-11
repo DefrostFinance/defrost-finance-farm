@@ -10,6 +10,8 @@ const Oracle = artifacts.require('Oracle');
 const TeamDistribute = artifacts.require('TeamDistribute');
 const TeamDistributeProxy = artifacts.require('DefrostTeamDistributeProxy');
 
+const TokenRelease = artifacts.require('tokenRelease');
+
 const MeltToken = artifacts.require("DefrostToken");
 const MultiSignature = artifacts.require("multiSignature");
 
@@ -71,6 +73,7 @@ contract('MinePoolProxy', function (accounts){
 
     let joeFarmChefInst;
     let joeToken;
+    let tokenReleaseInt;
 
     async function initPngDoubleFarm(){
         // constructor(
@@ -129,9 +132,11 @@ contract('MinePoolProxy', function (accounts){
         await usdc.mint(lp.address,VAL_1M);
 
         await lp.setReserve(usx.address,usdc.address);
+
+        console.log("token mint lp",lp.address);
 /////////////////////////////reward token///////////////////////////////////////////
         melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2],mulSiginst.address);
-
+        console.log("melt token",melt.address);
 //set farm///////////////////////////////////////////////////////////
         farminst = await MinePool.new(mulSiginst.address);
         console.log("pool address:", farminst.address);
@@ -207,7 +212,11 @@ contract('MinePoolProxy', function (accounts){
         // assert.equal(res.receipt.status,true);
 
         res = await farmproxyinst.setFixedTeamRatio(10,{from:operator1});
-/////////////////////////////////init//////////////////////////////////////////////////////
+/////////////////////////////////init token release//////////////////////////////////////////////////////
+        tokenReleaseInt = await TokenRelease.new();
+        res = await tokenReleaseInt.setParameter(melt.address,10*60,6,200);
+        assert.equal(res.receipt.status,true);
+///////////////////////////////////////////////////////////////////////////////////////////
         console.log("init double farm");
         await initPngDoubleFarm();
         await enablePngDoubleFarm();
