@@ -106,9 +106,11 @@ contract defrostFarmJoeStorage is multiSignatureClient,Operator,Halt, Reentrancy
     address public rewardToken;
     address public oracle;
     address public usx;
-    address public teamRewardReciever;
     uint256 public fixedTeamRatio;
     uint256 public fixedWhitelistRatio;
+
+    address public teamRewardSc;
+    address public releaseSc;
 
     mapping (uint256=>PoolMineInfo) public poolmineinfo;
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;// Info of each user that stakes LP tokens.

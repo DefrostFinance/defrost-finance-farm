@@ -12,6 +12,11 @@ interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
 }
 
+interface IReleaseSC {
+    function inputForRelease(address account,uint256 amount) external;
+}
+
+
 interface ILpToken {
     function totalSupply() external view returns (uint256);
     function decimals() external view returns (uint8);
@@ -627,15 +632,23 @@ contract defrostPangalinFarm is defrostPangalinStorage {
     }
 
     function setDefrostAddress( address _rewardToken,
-                                address _oracle,
-                                address _usx,
-                                address _teamRewardReciever)
-        public onlyOperator(1)
+        address _oracle,
+        address _usx,
+        address _teamRewardSc,
+        address _releaseSc)
+    public onlyOperator(1)
     {
+        require(_rewardToken!=address(0),"_rewardToken address is 0");
+        require(_oracle!=address(0),"_rewardToken address is 0");
+        require(_usx!=address(0),"_rewardToken address is 0");
+        require(_teamRewardSc!=address(0),"_rewardToken address is 0");
+        require(_releaseSc!=address(0),"_rewardToken address is 0");
+
         rewardToken = _rewardToken;
         oracle = _oracle;
         usx = _usx;
-        teamRewardReciever = _teamRewardReciever;
+        teamRewardSc = _teamRewardSc;
+        releaseSc = _releaseSc;
     }
 
     function totalStaked(uint256 _pid) public view returns (uint256){
@@ -781,13 +794,15 @@ contract defrostPangalinFarm is defrostPangalinStorage {
         (userRward,teamReward) = getUserRewardAndTeamReward(_pid,_user,_reward);
 
         if(teamReward>0) {
-            IERC20(rewardToken).approve(teamRewardReciever,teamReward);
-            ITeamRewardSC(teamRewardReciever).inputTeamReward(teamReward);
+            IERC20(rewardToken).approve(teamRewardSc,teamReward);
+            ITeamRewardSC(teamRewardSc).inputTeamReward(teamReward);
         }
 
         if(userRward>0) {
-            safeRewardTransfer(_user,userRward);
+            IERC20(rewardToken).approve(releaseSc,userRward);
+            IReleaseSC(releaseSc).inputForRelease(_user,userRward);
         }
     }
 
 }
+
