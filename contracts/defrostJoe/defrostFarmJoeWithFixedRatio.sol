@@ -4,6 +4,7 @@ import "../IERC20.sol";
 import "../SafeMath.sol";
 import "../SafeERC20.sol";
 
+
 interface IOracle {
     function getPrice(address asset) external view returns (uint256);
 }
@@ -14,6 +15,8 @@ interface ITeamRewardSC {
 
 interface IReleaseSC {
     function inputForRelease(address account,uint256 amount) external;
+    function getClaimAbleBalance(address account) external view returns (uint256);
+    function dispatchTimes() external view returns (uint256);
 }
 
 interface ILpToken {
@@ -229,12 +232,14 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
+
         uint256 accRewardPerShare = pool.accRewardPerShare;
         if (block.number > pool.lastRewardBlock && pool.currentSupply != 0) {
             uint256 multiplier = getMultiplier(_pid);
             uint256 reward = multiplier.mul(pool.rewardPerBlock);
             accRewardPerShare = accRewardPerShare.add(reward.mul(1e12).div(pool.currentSupply));
         }
+
 
         // return (user.amount, user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt));//orginal
        uint256 pendingReward = user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt);
@@ -524,6 +529,9 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
             pool.lastRewardBlock = block.number;
         }
 
+        //move to here
+        updatePool(_pid);
+
         UserInfo storage user = userInfo[_pid][msg.sender];
         if (user.amount > 0) {
             uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
@@ -539,8 +547,6 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
             pool.currentSupply = pool.currentSupply.add(_amount);
         }
 
-        //move to here
-        updatePool(_pid);
 
         // must excute after lpToken has beem transfered from user to this contract and the amount of user depoisted is updated.
         depositLPToChef(_pid,_amount);
@@ -564,6 +570,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         updatePool(_pid);
 
         uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
+
         if(pending > 0) {
             //IERC20(rewardToken).transfer(msg.sender, pending);
             mintUserRewardAndTeamReward(_pid,msg.sender,pending);
@@ -711,6 +718,8 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
     function getUserRewardAndTeamReward(address _user, uint256 _reward)
             public view returns(uint256,uint256)
     {
+       // return (_reward,0);
+
         uint256 userIncRatio = whiteListLpUserInfo[_user]>0? fixedWhitelistRatio:0;
         userIncRatio += RATIO_DENOM;
         uint256 userRward = _reward.mul(userIncRatio).div(RATIO_DENOM);
@@ -735,10 +744,29 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         }
 
         if(userRward>0) {
+            //safeRewardTransfer(_user,userRward);
             IERC20(rewardToken).approve(releaseSc,userRward);
             IReleaseSC(releaseSc).inputForRelease(_user,userRward);
         }
     }
+
+
+    function getAllClaimableReward(uint256 _pid,address _user)  public view returns(uint256,uint256,uint256) {
+        uint256 depositAmount;
+        uint256 deFrostReward;
+        uint256 joeReward;
+
+        (depositAmount,deFrostReward,joeReward) = allPendingReward(_pid,_user);
+
+        uint256 distimes = IReleaseSC(releaseSc).dispatchTimes();
+
+        uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
+        deFrostReward = deFrostReward.div(distimes).add(claimable);
+
+        return (depositAmount,deFrostReward,joeReward);
+
+    }
+
 
 }
 

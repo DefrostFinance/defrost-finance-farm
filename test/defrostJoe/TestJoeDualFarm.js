@@ -134,9 +134,16 @@ contract('MinePoolProxy', function (accounts){
         await lp.setReserve(usx.address,usdc.address);
 
         console.log("token mint lp",lp.address);
+
+
 /////////////////////////////reward token///////////////////////////////////////////
         melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2],mulSiginst.address);
         console.log("melt token",melt.address);
+
+/////////////////////////////////init token release//////////////////////////////////////////////////////
+        tokenReleaseInt = await TokenRelease.new();
+        res = await tokenReleaseInt.setParameter(melt.address,3600,6,200);
+        assert.equal(res.receipt.status,true);
 //set farm///////////////////////////////////////////////////////////
         farminst = await MinePool.new(mulSiginst.address);
         console.log("pool address:", farminst.address);
@@ -195,6 +202,7 @@ contract('MinePoolProxy', function (accounts){
                                                     oracleinst.address,
                                                     usx.address,
                                                     teamReward.address,
+                                                    tokenReleaseInt.address,
                                                     {from:operator1});
 
         assert.equal(res.receipt.status,true);
@@ -212,10 +220,7 @@ contract('MinePoolProxy', function (accounts){
         // assert.equal(res.receipt.status,true);
 
         res = await farmproxyinst.setFixedTeamRatio(10,{from:operator1});
-/////////////////////////////////init token release//////////////////////////////////////////////////////
-        tokenReleaseInt = await TokenRelease.new();
-        res = await tokenReleaseInt.setParameter(melt.address,10*60,6,200);
-        assert.equal(res.receipt.status,true);
+
 ///////////////////////////////////////////////////////////////////////////////////////////
         console.log("init double farm");
         await initPngDoubleFarm();
@@ -325,7 +330,21 @@ contract('MinePoolProxy', function (accounts){
         console.log("png reward=" + (pngpafterBalance - pngpreBalance));
 
     })
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    it("[0021] get back locked reward in serveral step,should pass", async()=>{
+        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
+        console.log("staker1 claimed reward=",staker1Claimed)
+
+        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        console.log("staker1 Pending reward=",staker1PendingReward)  ;
+
+        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        console.log("staker1 claimable reward=",staker1Claimable)  ;
+
+    })
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     it("[0030] check staker1 withdraw lp,should pass", async()=>{
         time.increase(2000);

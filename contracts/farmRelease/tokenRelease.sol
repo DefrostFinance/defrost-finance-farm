@@ -62,8 +62,8 @@ contract tokenRelease is tokenReleaseData {
         require(amount>0,"amount should be bigger than 0");
         //msg.sender should be the farm contract,here is msg.sender
         IERC20(meltAddress).transferFrom(msg.sender,address(this),amount);
-
-        uint256 idx = now.div(timeSpan);
+        //according day to cal idx
+        uint256 idx = now.div(24*3600);
 
         uint256 latest = userTxIdxs[account].length;
         if(latest == 0 || userTxIdxs[account][latest-1]!=idx){
@@ -89,58 +89,66 @@ contract tokenRelease is tokenReleaseData {
         lockedAllRewards[account][idx].alloc[i] = lockedAllRewards[account][idx].alloc[i].add(amount.sub(divAmount.mul(dispatchTimes-1)));
 
         lockedBalances[account] = lockedBalances[account].add(amount.sub(divAmount));
-
         IERC20(meltAddress).transfer(account,divAmount);
 
         userFarmClaimedBalances[account] = userFarmClaimedBalances[account].add(divAmount);
 
+        //get current claimable balance for account
+        uint256 claimable = getClaimAbleBalance(account);
+        claimphxExpired(account);
+
         emit Input(msg.sender,account,amount,divAmount);
     }
-    
+
+
+//    function claimphxExpiredReward() external inited {
+//        claimphxExpired(msg.sender);
+//    }
+
       /**
      * @dev user user claim expired reward
      */ 
-    function claimphxExpiredReward() external inited {
+    function claimphxExpired(address account) internal inited {
         require(meltAddress !=address(0),"phx token should be set");
         
         uint256 txcnt = 0;
-        uint256 idx = lockedIndexs[msg.sender].beginIdx;
-        uint256 endIdx = userTxIdxs[msg.sender].length;
+        uint256 idx = lockedIndexs[account].beginIdx;
+        uint256 endIdx = userTxIdxs[account].length;
         uint256 totalRet = 0;
 
         uint256 pretxid = 0;
         for(;idx<endIdx && txcnt<txNum;idx++) {
            //i used for the user input cphx tx idx,too much i used before,no changed now
-           uint256 i = userTxIdxs[msg.sender][idx];
+           uint256 i = userTxIdxs[account][idx];
            if(i!=pretxid){
                 pretxid = i;
             } else {
                 continue;
            }
 
-           if (now >= lockedAllRewards[msg.sender][i].startTime + timeSpan) {
-               if (lockedAllRewards[msg.sender][i].alloc[0] > 0) {
-                    if (now >= lockedAllRewards[msg.sender][i].startTime + lockPeriod) {
-                        totalRet = totalRet.add(lockedAllRewards[msg.sender][i].alloc[0]);
-                        lockedAllRewards[msg.sender][i].alloc[0] = 0;
+           if (now >= lockedAllRewards[account][i].startTime + timeSpan) {
+               if (lockedAllRewards[account][i].alloc[0] > 0) {
+                    if (now >= lockedAllRewards[account][i].startTime + lockPeriod) {
+                        totalRet = totalRet.add(lockedAllRewards[account][i].alloc[0]);
+                        lockedAllRewards[account][i].alloc[0] = 0;
                         //updated last expired idx
-                        lockedIndexs[msg.sender].beginIdx = idx;
+                        lockedIndexs[account].beginIdx = idx;
                     } else {
                       
-                        uint256 timeIdx = (now - lockedAllRewards[msg.sender][i].startTime).div(timeSpan) + 1;
+                        uint256 timeIdx = (now - lockedAllRewards[account][i].startTime).div(timeSpan) + 1;
                         uint256 j = 2;
                         uint256 subtotal = 0;
                         for(;j<timeIdx+1;j++) {
-                            subtotal = subtotal.add(lockedAllRewards[msg.sender][i].alloc[j]);
-                            lockedAllRewards[msg.sender][i].alloc[j] = 0;
+                            subtotal = subtotal.add(lockedAllRewards[account][i].alloc[j]);
+                            lockedAllRewards[account][i].alloc[j] = 0;
                         }
                         
                         //updated left locked balance,possible?
-                        if(subtotal<=lockedAllRewards[msg.sender][i].alloc[0]){
-                            lockedAllRewards[msg.sender][i].alloc[0] = lockedAllRewards[msg.sender][i].alloc[0].sub(subtotal);
+                        if(subtotal<=lockedAllRewards[account][i].alloc[0]){
+                            lockedAllRewards[account][i].alloc[0] = lockedAllRewards[account][i].alloc[0].sub(subtotal);
                         } else {
-                            subtotal = lockedAllRewards[msg.sender][i].alloc[0];
-                            lockedAllRewards[msg.sender][i].alloc[0] = 0;
+                            subtotal = lockedAllRewards[account][i].alloc[0];
+                            lockedAllRewards[account][i].alloc[0] = 0;
                         }
                         
                         totalRet = totalRet.add(subtotal);
@@ -155,20 +163,20 @@ contract tokenRelease is tokenReleaseData {
            }
         }
         
-        lockedBalances[msg.sender] = lockedBalances[msg.sender].sub(totalRet);
+        lockedBalances[account] = lockedBalances[account].sub(totalRet);
         //transfer back to user
-        IERC20(meltAddress).transfer(msg.sender,totalRet);
+        IERC20(meltAddress).transfer(account,totalRet);
 
-        userFarmClaimedBalances[msg.sender] = userFarmClaimedBalances[msg.sender].add(totalRet);
+        userFarmClaimedBalances[account] = userFarmClaimedBalances[account].add(totalRet);
 
-        emit Claim(msg.sender,totalRet,txcnt);
+        emit Claim(account,totalRet,txcnt);
     }
     
       /**
      * @dev get user claimable balance
      */
     function getClaimAbleBalance(address account) public view returns (uint256) {
-        require(meltAddress !=address(0),"phx token should be set");
+        require(meltAddress !=address(0),"melt token should be set");
         
         uint256 txcnt = 0;
         uint256 idx = lockedIndexs[account].beginIdx;

@@ -2,6 +2,8 @@ const { time, expectEvent} = require("@openzeppelin/test-helpers");
 const PoolProxy = artifacts.require('deforestFarmJoeProxy');
 const MinePool = artifacts.require('defrostFarmJoeFixedRatio');
 
+const TokenRelease = artifacts.require('tokenRelease');
+
 const LpToken = artifacts.require('LpToken');
 const WethToken = artifacts.require('LpToken');
 
@@ -132,6 +134,10 @@ contract('MinePoolProxy', function (accounts){
 /////////////////////////////reward token///////////////////////////////////////////
         melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2],mulSiginst.address);
 
+/////////////////////////////////init token release//////////////////////////////////////////////////////
+        tokenReleaseInt = await TokenRelease.new();
+        res = await tokenReleaseInt.setParameter(melt.address,day,6,200);
+        assert.equal(res.receipt.status,true);
 //set farm///////////////////////////////////////////////////////////
         farminst = await MinePool.new(mulSiginst.address);
         console.log("pool address:", farminst.address);
@@ -190,6 +196,7 @@ contract('MinePoolProxy', function (accounts){
                                                     oracleinst.address,
                                                     usx.address,
                                                     teamReward.address,
+                                                    tokenReleaseInt.address,
                                                     {from:operator1});
 
         assert.equal(res.receipt.status,true);
@@ -259,6 +266,7 @@ contract('MinePoolProxy', function (accounts){
 
 
     it("[0020] check staker1 mined balance,should pass", async()=>{
+        console.log("====================================================================================")
         time.increaseTo(startTime+2000);
         let res = await farmproxyinst.totalStaked(0);
         console.log("totalstaked=" + res);
@@ -267,7 +275,7 @@ contract('MinePoolProxy', function (accounts){
         console.log("blocknum1=" + block.number)
 
         res = await farmproxyinst.allPendingReward(0,staker1)
-        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        console.log("allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.getPoolInfo(0)
         console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),
@@ -286,6 +294,108 @@ contract('MinePoolProxy', function (accounts){
         let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
         let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
 
+        res = await farmproxyinst.getAllClaimableReward(0,staker1)
+        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.withdraw(0,0,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
+        console.log("staker1 melt reward=" + (afterBalance - preBalance));
+
+        let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+        console.log("team member1 melt reward=" + (afterTeam1Balance1 - preTeamBalance1));
+        console.log("team member2 melt reward=" + (afterTeam1Balance2 - preTeamBalance2));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+        console.log("png reward=" + (pngpafterBalance - pngpreBalance));
+        console.log("====================================================================================")
+
+    })
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    it("[0021] check locked and pending balance,should pass", async()=>{
+        time.increase(day+1);
+        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
+        console.log("staker1 claimed reward=",staker1Claimed)
+
+        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        console.log("staker1 Pending reward=",staker1PendingReward)  ;
+
+        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
+        console.log("staker1 claimable reward=",staker1Claimable)  ;
+
+    })
+
+    it("[0022] check staker1 withdraw reward,should pass", async()=>{
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker1)
+        console.log("allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+
+        let preTeamBalance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let preTeamBalance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+
+        let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+
+        res = await farmproxyinst.getAllClaimableReward(0,staker1)
+        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.withdraw(0,0,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
+        console.log("staker1 melt reward=" + (afterBalance - preBalance));
+
+        let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+        console.log("team member1 melt reward=" + (afterTeam1Balance1 - preTeamBalance1));
+        console.log("team member2 melt reward=" + (afterTeam1Balance2 - preTeamBalance2));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+        console.log("png reward=" + (pngpafterBalance - pngpreBalance));
+        console.log("====================================================================================")
+
+    })
+
+    it("[0023] check locked and pending balance,should pass", async()=>{
+
+        time.increase(4*day+1);
+
+        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
+        console.log("staker1 claimed reward=",staker1Claimed)
+
+        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        console.log("staker1 Pending reward=",staker1PendingReward)  ;
+
+        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
+        console.log("staker1 claimable reward=",staker1Claimable);
+
+    })
+
+    it("[0024] check staker1 withdraw reward,should pass", async()=>{
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker1)
+        console.log("allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+
+        let preTeamBalance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let preTeamBalance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+
+        let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+
+        res = await farmproxyinst.getAllClaimableReward(0,staker1)
+        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
         res = await farmproxyinst.withdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
 
@@ -300,9 +410,21 @@ contract('MinePoolProxy', function (accounts){
         let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
         console.log("png reward=" + (pngpafterBalance - pngpreBalance));
 
+        console.log("====================================================================================")
     })
 
+    it("[0025] check locked and pending balance,should pass", async()=>{
+        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
+        console.log("staker1 claimed reward=",staker1Claimed)
 
+        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        console.log("staker1 Pending reward=",staker1PendingReward)  ;
+
+        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
+        console.log("staker1 claimable reward=",staker1Claimable);
+        console.log("====================================================================================")
+    })
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it("[0030] check staker1 withdraw lp,should pass", async()=>{
         time.increase(2000);
 
@@ -341,6 +463,8 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
     it("[0040] team withdraw reward lp,should pass", async()=>{
         let preBalance1 = web3.utils.fromWei(await melt.balanceOf(teamMember1));
         let preBalance2 = web3.utils.fromWei(await melt.balanceOf(teamMember2));

@@ -654,11 +654,11 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
         address _releaseSc)
     public onlyOperator(1)
     {
-        require(_rewardToken!=address(0),"_rewardToken address is 0");
-        require(_oracle!=address(0),"_rewardToken address is 0");
-        require(_usx!=address(0),"_rewardToken address is 0");
-        require(_teamRewardSc!=address(0),"_rewardToken address is 0");
-        require(_releaseSc!=address(0),"_rewardToken address is 0");
+//        require(_rewardToken!=address(0),"_rewardToken address is 0");
+//        require(_oracle!=address(0),"_rewardToken address is 0");
+//        require(_usx!=address(0),"_rewardToken address is 0");
+//        require(_teamRewardSc!=address(0),"_rewardToken address is 0");
+//        require(_releaseSc!=address(0),"_rewardToken address is 0");
 
         rewardToken = _rewardToken;
         oracle = _oracle;
@@ -679,9 +679,9 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
            poolInfo[_pid].bonusStartBlock,poolInfo[_pid].rewardPerBlock);
     }
 
-    function getVersion() public pure returns (uint256) {
-        return 1;
-    }
+//    function getVersion() public pure returns (uint256) {
+//        return 1;
+//    }
 ////////////////////////////////////////////////////////////////////////////////////////////////
     function setWhiteListRewardIncRatio(uint256[] memory _amount,
                                         uint256[] memory _incPercent)
