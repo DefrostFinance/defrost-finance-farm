@@ -9,8 +9,11 @@ import "./openzeppelin/contracts/ownership/Ownable.sol";
 contract MockToken is ERC20, Ownable {
     string public name;
     uint256 public decimal;
-    constructor(string memory _name,uint256 _decimal) public {
+    string public symbol;
+
+    constructor(string memory _name,string memory _symbol,uint256 _decimal) public {
         name = _name;
+        symbol = _symbol;
         decimal = _decimal;
     }
 

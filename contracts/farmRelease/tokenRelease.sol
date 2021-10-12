@@ -95,7 +95,9 @@ contract tokenRelease is tokenReleaseData {
 
         //get current claimable balance for account
         uint256 claimable = getClaimAbleBalance(account);
-        claimphxExpired(account);
+        if(claimable>0) {
+            claimphxExpired(account);
+        }
 
         emit Input(msg.sender,account,amount,divAmount);
     }
