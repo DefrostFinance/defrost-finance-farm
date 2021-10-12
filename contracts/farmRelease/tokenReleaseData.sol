@@ -20,6 +20,7 @@ contract tokenReleaseData is Halt {
     }
 
     address public meltAddress;  //token address
+    uint256 public idxperiod = 24*3600;
     uint256 public timeSpan = 30*24*3600;//time interval span time ,default one month
     uint256 public dispatchTimes = 6;    //allocation times,default 6 times
     uint256 public txNum = 100; //100 times transfer tx 

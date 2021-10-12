@@ -22,7 +22,7 @@ contract tokenRelease is tokenReleaseData {
     /**
      * @dev constructor function. set phx minePool contract address. 
      */ 
-    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum) onlyOwner public{
+    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) onlyOwner public{
         if (_meltAddress != address(0))
             meltAddress = _meltAddress;
             
@@ -34,6 +34,10 @@ contract tokenRelease is tokenReleaseData {
         
         if (_txNum != 0) 
             txNum = _txNum;
+
+        if(_idxperiod != 0) {
+            idxperiod = _idxperiod;
+        }
 
         lockPeriod = dispatchTimes*timeSpan;
     }
@@ -63,7 +67,7 @@ contract tokenRelease is tokenReleaseData {
         //msg.sender should be the farm contract,here is msg.sender
         IERC20(meltAddress).transferFrom(msg.sender,address(this),amount);
         //according day to cal idx
-        uint256 idx = now.div(24*3600);
+        uint256 idx = now.div(idxperiod);
 
         uint256 latest = userTxIdxs[account].length;
         if(latest == 0 || userTxIdxs[account][latest-1]!=idx){
