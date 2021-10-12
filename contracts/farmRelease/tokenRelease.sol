@@ -58,7 +58,7 @@ contract tokenRelease is tokenReleaseData {
         return lockedBalances[account];
     }
 
-    function inputForRelease(address account,uint256 amount) external inited {
+    function releaseToken(address account,uint256 amount) external inited {
         require(amount>0,"amount should be bigger than 0");
         //msg.sender should be the farm contract,here is msg.sender
         IERC20(meltAddress).transferFrom(msg.sender,address(this),amount);

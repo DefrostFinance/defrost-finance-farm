@@ -14,9 +14,11 @@ interface ITeamRewardSC {
 }
 
 interface IReleaseSC {
-    function inputForRelease(address account,uint256 amount) external;
+    function releaseToken(address account,uint256 amount) external;
     function getClaimAbleBalance(address account) external view returns (uint256);
     function dispatchTimes() external view returns (uint256);
+    function lockedBalanceOf(address account) external view returns(uint256);
+    function userFarmClaimedBalances(address account) external view returns (uint256);
 }
 
 interface ILpToken {
@@ -746,12 +748,14 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         if(userRward>0) {
             //safeRewardTransfer(_user,userRward);
             IERC20(rewardToken).approve(releaseSc,userRward);
-            IReleaseSC(releaseSc).inputForRelease(_user,userRward);
+            IReleaseSC(releaseSc).releaseToken(_user,userRward);
         }
     }
 
+    //function lockedBalanceOf(address account) external view returns(uint256);
+   // function userFarmClaimedBalances(address account) external view returns (uint256);
 
-    function getAllClaimableReward(uint256 _pid,address _user)  public view returns(uint256,uint256,uint256) {
+    function getRewardInfo(uint256 _pid,address _user)  public view returns(uint256,uint256,uint256,uint256,uint256) {
         uint256 depositAmount;
         uint256 deFrostReward;
         uint256 joeReward;
@@ -761,9 +765,11 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         uint256 distimes = IReleaseSC(releaseSc).dispatchTimes();
 
         uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
-        deFrostReward = deFrostReward.div(distimes).add(claimable);
+        claimable = deFrostReward.div(distimes).add(claimable);
 
-        return (depositAmount,deFrostReward,joeReward);
+        uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
+        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user);
+        return (depositAmount,claimable,locked,claimed,joeReward);
 
     }
 

@@ -294,8 +294,8 @@ contract('MinePoolProxy', function (accounts){
         let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
         let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
 
-        res = await farmproxyinst.getAllClaimableReward(0,staker1)
-        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+        //res = await farmproxyinst.getAllClaimableReward(0,staker1)
+        //console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.withdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
@@ -315,17 +315,22 @@ contract('MinePoolProxy', function (accounts){
     })
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //return (depositAmount,claimable,locked,claimed,joeReward);
     it("[0021] check locked and pending balance,should pass", async()=>{
         time.increase(day+1);
-        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
-        console.log("staker1 claimed reward=",staker1Claimed)
 
-        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
-        console.log("staker1 Pending reward=",staker1PendingReward)  ;
+        // let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
+        // console.log("staker1 claimed reward=",staker1Claimed)
+        // let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
+        // console.log("staker1 Pending reward=",staker1PendingReward);
 
-        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
-        console.log("staker1 claimable reward=",staker1Claimable)  ;
-
+        let rewardInfo = await farmproxyinst.getRewardInfo(0,staker1);
+        console.log("staker1 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
+        console.log("staker1 claimable",web3.utils.fromWei(rewardInfo[1]));
+        console.log("staker1 locked",web3.utils.fromWei(rewardInfo[2]));
+        console.log("staker1 claimed",web3.utils.fromWei(rewardInfo[3]));
+        console.log("staker1 extern reward",web3.utils.fromWei(rewardInfo[4]));
+        console.log("====================================================================================")
     })
 
     it("[0022] check staker1 withdraw reward,should pass", async()=>{
@@ -343,8 +348,8 @@ contract('MinePoolProxy', function (accounts){
         let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
         let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
 
-        res = await farmproxyinst.getAllClaimableReward(0,staker1)
-        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+        //res = await farmproxyinst.getAllClaimableReward(0,staker1)
+        //console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.withdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
@@ -367,15 +372,13 @@ contract('MinePoolProxy', function (accounts){
 
         time.increase(4*day+1);
 
-        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
-        console.log("staker1 claimed reward=",staker1Claimed)
-
-        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
-        console.log("staker1 Pending reward=",staker1PendingReward)  ;
-
-        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
-        console.log("staker1 claimable reward=",staker1Claimable);
-
+        let rewardInfo = await farmproxyinst.getRewardInfo(0,staker1);
+        console.log("staker1 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
+        console.log("staker1 claimable",web3.utils.fromWei(rewardInfo[1]));
+        console.log("staker1 locked",web3.utils.fromWei(rewardInfo[2]));
+        console.log("staker1 claimed",web3.utils.fromWei(rewardInfo[3]));
+        console.log("staker1 extern reward",web3.utils.fromWei(rewardInfo[4]));
+        console.log("====================================================================================")
     })
 
     it("[0024] check staker1 withdraw reward,should pass", async()=>{
@@ -393,8 +396,8 @@ contract('MinePoolProxy', function (accounts){
         let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
         let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
 
-        res = await farmproxyinst.getAllClaimableReward(0,staker1)
-        console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+       // res = await farmproxyinst.getAllClaimableReward(0,staker1)
+       // console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.withdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
@@ -414,14 +417,12 @@ contract('MinePoolProxy', function (accounts){
     })
 
     it("[0025] check locked and pending balance,should pass", async()=>{
-        let staker1Claimed = web3.utils.fromWei(await tokenReleaseInt.userFarmClaimedBalances(staker1));
-        console.log("staker1 claimed reward=",staker1Claimed)
-
-        let staker1PendingReward = web3.utils.fromWei(await tokenReleaseInt.lockedBalances(staker1));
-        console.log("staker1 Pending reward=",staker1PendingReward)  ;
-
-        let staker1Claimable = web3.utils.fromWei(await tokenReleaseInt.getClaimAbleBalance(staker1));
-        console.log("staker1 claimable reward=",staker1Claimable);
+        let rewardInfo = await farmproxyinst.getRewardInfo(0,staker1);
+        console.log("staker1 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
+        console.log("staker1 claimable",web3.utils.fromWei(rewardInfo[1]));
+        console.log("staker1 locked",web3.utils.fromWei(rewardInfo[2]));
+        console.log("staker1 claimed",web3.utils.fromWei(rewardInfo[3]));
+        console.log("staker1 extern reward",web3.utils.fromWei(rewardInfo[4]));
         console.log("====================================================================================")
     })
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
