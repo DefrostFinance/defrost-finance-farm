@@ -658,20 +658,19 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
 
     function setDefrostAddress( address _rewardToken,
                                 address _oracle,
-                                address _usx,
+                                address _h2o,
                                 address _teamRewardSc,
                                 address _releaseSc)
         public onlyOperator(1)
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
         require(_oracle!=address(0),"_rewardToken address is 0");
-        require(_usx!=address(0),"_rewardToken address is 0");
         require(_teamRewardSc!=address(0),"_rewardToken address is 0");
         require(_releaseSc!=address(0),"_rewardToken address is 0");
 
         rewardToken = _rewardToken;
         oracle = _oracle;
-        usx = _usx;
+        h2o = _h2o;
         teamRewardSc = _teamRewardSc;
         releaseSc = _releaseSc;
     }

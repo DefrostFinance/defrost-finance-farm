@@ -649,7 +649,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
 
     function setDefrostAddress( address _rewardToken,
         address _oracle,
-        address _usx,
+        address _h2o,
         address _teamRewardSc,
         address _releaseSc)
     public onlyOperator(1)
@@ -662,7 +662,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
 
         rewardToken = _rewardToken;
         oracle = _oracle;
-        usx = _usx;
+        h2o = _h2o;
         teamRewardSc = _teamRewardSc;
         releaseSc = _releaseSc;
     }
@@ -738,7 +738,7 @@ contract defrostFarmJoe is defrostFarmJoeStorage {
 
     function getLpTvlAndUserTvl(uint256 _pid,uint256 lpamount) public view returns (uint256,uint256) {
         address token = ILpToken(poolInfo[_pid].lpToken).token0();
-        if(token==usx) {
+        if(token== h2o) {
             token = ILpToken(poolInfo[_pid].lpToken).token1();
         }
 

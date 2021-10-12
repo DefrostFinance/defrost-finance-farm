@@ -105,7 +105,7 @@ contract defrostFarmJoeStorage is multiSignatureClient,Operator,Halt, Reentrancy
     //use cPhx
     address public rewardToken;
     address public oracle;
-    address public usx;
+    address public h2o;
     uint256 public fixedTeamRatio;
     uint256 public fixedWhitelistRatio;
 
