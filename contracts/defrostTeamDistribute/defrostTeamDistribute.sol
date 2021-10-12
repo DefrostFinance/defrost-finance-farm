@@ -45,7 +45,9 @@ contract TeamDistribute is defrostTeamDistributeStorage {
         userCount = 0;//reset to zero
         for(uint256 i=0;i<users.length;i++){
             require(users[i]!=address(0),"user address is 0");
-            require(ratio[i]>0,"ration should be bigger than 0");
+            require(ratio[i]>0,"ratio should be bigger than 0");
+            require(ratio[i]<=RATIO_DENOM,"ratio should be bigger than 0");
+
             totalRatio += ratio[i];
             allUserIdx[users[i]] = userCount;
             allUserInfo[userCount] = userInfo(users[i],ratio[i],0,0,false);
@@ -88,13 +90,15 @@ contract TeamDistribute is defrostTeamDistributeStorage {
         require(!allUserInfo[idx].disable,"user is diabled already");
 
         uint256 amount = allUserInfo[idx].pendingAmount;
+        require(amount>0,"pending amount need to be bigger than 0");
+
         allUserInfo[idx].pendingAmount = 0;
 
         //transfer back to user
         uint256 balbefore = IERC20(rewardToken).balanceOf(msg.sender);
         IERC20(rewardToken).transfer(msg.sender,amount);
         uint256 balafter = IERC20(rewardToken).balanceOf(msg.sender);
-        require((balafter-balbefore)==amount,"error transfer phx,balance check failed");
+        require((balafter.sub(balbefore))==amount,"error transfer melt,balance check failed");
     }
 
     function inputTeamReward(uint256 _amount)
@@ -107,8 +111,8 @@ contract TeamDistribute is defrostTeamDistributeStorage {
         for(uint256 i=0;i<userCount;i++){
             userInfo storage info = allUserInfo[i];
             uint256 useramount = _amount.mul(info.ratio).div(RATIO_DENOM);
-            info.pendingAmount += useramount;
-            info.wholeAmount += useramount;
+            info.pendingAmount = info.pendingAmount.add(useramount);
+            info.wholeAmount = info.wholeAmount.add(useramount);
         }
     }
     
