@@ -1,12 +1,3 @@
-const { time, expectEvent} = require("@openzeppelin/test-helpers");
-const PoolProxy = artifacts.require('PhxDoubleFarmProxy');
-const MinePool = artifacts.require('PhxDoubleFarm');
-const LpToken = artifacts.require('WaspToken');
-const WaspToken = artifacts.require('WaspToken');
-const CphxToken = artifacts.require("WaspToken");
-const Chef = artifacts.require("WanSwapFarm");
-const MultiSignature = artifacts.require("multiSignature");
-
 const assert = require('chai').assert;
 const Web3 = require('web3');
 const config = require("../truffle-config.js");
@@ -19,10 +10,10 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
 let minutes = 60;
 let hour    = 60*60;
 let day     = 24*hour;
-let secperblock = 5;
-let blocksperday = day/5;
+let secperblock = 3;
+let blocksperday = day/secperblock;
 
-let farmAmountPerday = web3.utils.toWei("3000","ether");
+let farmAmountPerday = web3.utils.toWei("10000","ether");
 let rewardperblock = new BN(farmAmountPerday.toString(10)).div(new BN(blocksperday));
 let endblock = 16188995 + blocksperday*365*3;
 console.log(rewardperblock.toString(10),endblock);

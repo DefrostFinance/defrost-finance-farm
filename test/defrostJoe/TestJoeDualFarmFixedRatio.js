@@ -25,6 +25,7 @@ const BN = require("bn.js");
 var utils = require('../utils.js');
 web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
 
+
 /**************************************************
  test case only for the ganahce command
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
