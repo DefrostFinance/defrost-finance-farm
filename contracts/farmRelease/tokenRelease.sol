@@ -47,11 +47,13 @@ contract tokenRelease is tokenReleaseData {
      */
     function emergencyGetbackLeft()  public isHalted {
         require(lockedBalances[msg.sender]>0,"locked balance is zero");
+        uint256 amount = lockedBalances[msg.sender];
+
         lockedBalances[msg.sender] = 0;
 
         userFarmClaimedBalances[msg.sender] = userFarmClaimedBalances[msg.sender].add(lockedBalances[msg.sender]);
 
-        IERC20(meltAddress).transfer(msg.sender,lockedBalances[msg.sender]);
+        IERC20(meltAddress).transfer(msg.sender,amount);
     }  
 
     /**
