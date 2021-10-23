@@ -1,15 +1,15 @@
 pragma solidity ^0.5.16;
 import "../modules/SafeMath.sol";
 import "../modules/IERC20.sol";
+import "../modules/proxyOwner.sol";
 import "./defrostTeamDistributeStorage.sol";
-
 
 /**
  * @title FPTCoin is finnexus collateral Pool token, implement ERC20 interface.
  * @dev ERC20 token. Its inside value is collatral pool net worth.
  *
  */
-contract TeamDistribute is defrostTeamDistributeStorage {
+contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
 
     using SafeMath for uint256;
     modifier inited (){
@@ -17,8 +17,9 @@ contract TeamDistribute is defrostTeamDistributeStorage {
     	  _;
     }
 
-    constructor(address _multiSignature,address _rewardToken)
-        multiSignatureClient(_multiSignature)
+    constructor(address _multiSignature,address origin0,address origin1,
+                address _rewardToken)
+        proxyOwner(_multiSignature,origin0,origin1)
         public
     {
         rewardToken = _rewardToken;
@@ -28,7 +29,7 @@ contract TeamDistribute is defrostTeamDistributeStorage {
      * @dev getting back the left mine token
      * @param reciever the reciever for getting back mine token
      */
-    function getbackLeftReward(address reciever)  public onlyOperator(0) validCall {
+    function getbackLeftReward(address reciever)  public onlyOrigin {
         uint256 bal =  IERC20(rewardToken).balanceOf(address(this));
         IERC20(rewardToken).transfer(reciever,bal);
     }  
@@ -37,7 +38,7 @@ contract TeamDistribute is defrostTeamDistributeStorage {
                                 uint256[] memory ratio)
         public
         inited
-        onlyOperator(0)
+        onlyOrigin
     {
         require(users.length==ratio.length);
         uint256 totalRatio = 0;
@@ -60,7 +61,7 @@ contract TeamDistribute is defrostTeamDistributeStorage {
     function ressetUserRatio(address user,uint256 ratio)
         public
         inited
-        onlyOperator(0)
+        onlyOrigin
     {
         require(ratio<RATIO_DENOM);
         uint256 idx = allUserIdx[user];
@@ -72,8 +73,7 @@ contract TeamDistribute is defrostTeamDistributeStorage {
     function setUserStatus(address user,bool status)
         public
         inited
-        onlyOperator(0)
-        validCall
+        onlyOrigin
     {
         require(user != address(0));
         uint256 idx = allUserIdx[msg.sender];

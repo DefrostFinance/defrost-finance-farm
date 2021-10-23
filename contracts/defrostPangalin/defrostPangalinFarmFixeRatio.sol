@@ -3,10 +3,7 @@ import "./defrostPangalinStorage.sol";
 import "../modules/IERC20.sol";
 import "../modules/SafeMath.sol";
 import "../modules/SafeERC20.sol";
-
-interface IOracle {
-    function getPrice(address asset) external view returns (uint256);
-}
+import "../modules/proxyOwner.sol";
 
 interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
@@ -28,13 +25,6 @@ interface ILpToken {
     function token1() external view returns (address);
 }
 
-interface IMint {
-    function mint(address account, uint256 amount) external;
-}
-
-interface IDecimals {
-    function decimals() external view returns (uint8);
-}
 
 interface IPangalinFarm {
     function getReward() external;
@@ -52,7 +42,7 @@ interface IPangalinManager {
     function weights(address lptoken) external view returns (uint);
 }
 
-contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
+contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -69,8 +59,8 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event GetBackLeftRewardToken(address to, uint256 amount);
 
-    constructor(address _multiSignature)
-        multiSignatureClient(_multiSignature)
+    constructor(address _multiSignature,address origin0,address origin1)
+        proxyOwner(_multiSignature,origin0,origin1)
         public
     {
 
@@ -139,7 +129,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
                  uint256 _totalMineReward,
                  uint256 _duration,
                  uint256 _secPerBlk
-             ) public onlyOperator(1) {
+             ) public onlyOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
         //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
@@ -191,7 +181,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
                             uint256 _totalMineReward,
                             uint256 _duration)
             public
-            onlyOperator(1)
+            onlyOrigin
     {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(_bonusEndBlock > block.number, "_bonusEndBlock <= block.number");
@@ -268,7 +258,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         return allTotalUnclaimed;
     }
 
-    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public onlyOperator(0) validCall {
+    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public onlyOrigin {
 
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
@@ -307,7 +297,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         return (depositAmount, deFrostReward, extReward);
     }
 
-    function enableDoubleFarming(uint256 _pid, bool enable) public onlyOperator(1){
+    function enableDoubleFarming(uint256 _pid, bool enable) public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
         require(pool.extFarmInfo.extFarmAddr != address(0x0),"pool not supports double farming yet");
@@ -342,7 +332,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
 
     }
 
-    function setDoubleFarming(uint256 _pid,address extFarmAddr,address rewardToken) public onlyOperator(1){
+    function setDoubleFarming(uint256 _pid,address extFarmAddr,address rewardToken) public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
@@ -358,7 +348,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         emit SetExtFarm(_pid, extFarmAddr, rewardToken);
     }
 
-    function disableExtEnableClaim(uint256 _pid)public onlyOperator(1){
+    function disableExtEnableClaim(uint256 _pid)public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -572,7 +562,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
     }
 
 
-    function emergencyWithdrawExtLp(uint256 _pid) public onlyOperator(0) validCall {
+    function emergencyWithdrawExtLp(uint256 _pid) public onlyOrigin {
         require(_pid < poolInfo.length, "pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -596,7 +586,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         }
     }
 
-    function quitDefrostFarm(address _to) public onlyOperator(0) validCall {
+    function quitDefrostFarm(address _to) public onlyOrigin {
         require(_to != address(0), "_to == 0");
         uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
         uint256 length = poolInfo.length;
@@ -611,7 +601,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         emit QuitDefrostReward(_to, rewardTokenBal);
     }
 
-    function quitExtFarm(address extRewardToken,address extFarmAddr,address _to) public onlyOperator(0) validCall {
+    function quitExtFarm(address extRewardToken,address extFarmAddr,address _to) public onlyOrigin {
         require(_to != address(0), "_to == 0");
         require(extRewardToken != address(0), "extFarmAddr == 0");
 
@@ -628,7 +618,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         emit QuitExtReward(rewardToken,address(rewardToken),_to, quitBalance);
     }
 
-    function getBackLeftRewardToken(address _to) public onlyOperator(0) validCall {
+    function getBackLeftRewardToken(address _to) public onlyOrigin {
         require(_to != address(0), "_to == 0");
         uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
         safeRewardTransfer(_to, rewardTokenBal);
@@ -640,7 +630,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         address _usx,
         address _teamRewardSc,
         address _releaseSc)
-    public onlyOperator(1)
+       public onlyOrigin
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
         require(_oracle!=address(0),"_rewardToken address is 0");
@@ -673,20 +663,20 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
 
 
     function setFixedTeamRatio(uint256 _ratio)
-    public onlyOperator(1)
+    public onlyOrigin
     {
         fixedTeamRatio = _ratio;
     }
 
     function setFixedWhitelistRatio(uint256 _ratio)
-    public onlyOperator(1)
+    public onlyOrigin
     {
         fixedWhitelistRatio = _ratio;
     }
 
     function setWhiteList(address[] memory _user,
         uint256[] memory _amount)
-    public onlyOperator(1)
+    public onlyOrigin
     {
         require(_user.length==_amount.length,"array length is not equal");
         for(uint256 i=0;i<_amount.length;i++) {

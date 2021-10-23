@@ -2,16 +2,20 @@ pragma solidity ^0.5.16;
 import "./tokenReleaseData.sol";
 import "../modules/SafeMath.sol";
 import "../modules/IERC20.sol";
+import "../modules/proxyOwner.sol";
 
 /**
  * @title FPTCoin is finnexus collateral Pool token, implement ERC20 interface.
  * @dev ERC20 token. Its inside value is collatral pool net worth.
  *
  */
-contract tokenRelease is tokenReleaseData {
+contract tokenRelease is tokenReleaseData,proxyOwner {
     using SafeMath for uint256;
 
-    constructor () public{
+    constructor (address multiSignature,address origin0,address origin1)
+        proxyOwner(multiSignature,origin0,origin1)
+        public
+    {
     }
 
     modifier inited (){
@@ -22,7 +26,7 @@ contract tokenRelease is tokenReleaseData {
     /**
      * @dev constructor function. set phx minePool contract address. 
      */ 
-    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) onlyOwner public{
+    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) onlyOrigin public{
         if (_meltAddress != address(0))
             meltAddress = _meltAddress;
             

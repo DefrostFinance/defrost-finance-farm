@@ -1,6 +1,7 @@
 
 pragma solidity ^0.5.16;
 
+import "../modules/proxyOwner.sol";
 import "../modules/SafeMath.sol";
 import "../modules/IERC20.sol";
 import "../modules/Halt.sol";
@@ -10,7 +11,8 @@ import "../modules/ReentrancyGuard.sol";
 import "./LPTokenWrapper.sol";
 import "./TokenFarm.sol";
 
-contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,ReentrancyGuard{
+
+contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
 
     uint256 constant public REWARD_NUM = 2;
 
@@ -20,8 +22,9 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
 
-    constructor(address _multiSignature,address _stakeToken,address[] memory _rewardTokens)
-        multiSignatureClient(_multiSignature)
+    constructor(address _multiSignature,address origin0,address origin1,
+                address _stakeToken,address[] memory _rewardTokens)
+        proxyOwner(_multiSignature,origin0,origin1)
         public
     {
         require(_rewardTokens.length==REWARD_NUM);
@@ -33,11 +36,11 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         for(uint256 i=0;i<_rewardTokens.length;i++) {
             rewardTokens.push(_rewardTokens[i]);
             tokenFarms[_rewardTokens[i]] = new TokenFarm(address(this),_rewardTokens[i]);
-            IERC20(_rewardTokens[i]).approve(address(tokenFarms[_rewardTokens[i]]),0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+            IERC20(_rewardTokens[i]).approve(address(tokenFarms[_rewardTokens[i]]),~uint256(0));
         }
     }
 
-    function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public onlyOwner{
+    function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public onlyOrigin{
         require(_pid<REWARD_NUM);
         require(_reward>0);
         require(_duration>0);
@@ -45,7 +48,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
         tokenFarms[rewardTokens[_pid]].setMineRate(_reward,_duration);
     }
 //
-    function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public onlyOwner {
+    function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public onlyOrigin {
          require(_pid<REWARD_NUM);
          require(_startime>now);
          require(_endtime>_startime);
@@ -54,8 +57,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,Re
     }
 
     function getbackLeftMiningToken(address reciever)  public
-        onlyOperator(0)
-        validCall
+        onlyOrigin
     {
         for(uint256 i=0;i<rewardTokens.length;i++) {
             tokenFarms[rewardTokens[i]].getbackLeftMiningToken(reciever);

@@ -1,10 +1,7 @@
 pragma solidity ^0.5.16;
 import "../modules/Halt.sol";
-import "../modules/Admin.sol";
-import "../modules/multiSignatureClient.sol";
-import "../modules/Operator.sol";
 
-contract defrostTeamDistributeStorage is Halt,Operator,multiSignatureClient {
+contract defrostTeamDistributeStorage is Halt{
     uint256 RATIO_DENOM = 100;
     struct userInfo {
         address user;

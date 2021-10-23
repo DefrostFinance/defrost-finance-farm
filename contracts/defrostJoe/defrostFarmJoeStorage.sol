@@ -43,7 +43,7 @@ contract deFrostFarmErrorReporter {
     }
 }
 
-contract defrostFarmJoeStorage is multiSignatureClient,Operator,Halt, ReentrancyGuard{
+contract defrostFarmJoeStorage is Halt, ReentrancyGuard{
     // Info of each user.
     struct UserInfo {
         uint256 amount;     // How many LP tokens the user has provided.

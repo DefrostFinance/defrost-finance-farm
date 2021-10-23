@@ -3,7 +3,7 @@ pragma solidity 0.5.16;
 import "../modules/Halt.sol";
 import "../modules/ReentrancyGuard.sol";
 import "../modules/multiSignatureClient.sol";
-import "../modules/Operator.sol";
+
 
 contract defrostFarmErrorReporter {
     enum Error {
@@ -43,7 +43,7 @@ contract defrostFarmErrorReporter {
     }
 }
 
-contract defrostPangalinStorage is multiSignatureClient,Operator,Halt, ReentrancyGuard{
+contract defrostPangalinStorage is Halt, ReentrancyGuard{
     // Info of each user.
     struct UserInfo {
         uint256 amount;     // How many LP tokens the user has provided.
