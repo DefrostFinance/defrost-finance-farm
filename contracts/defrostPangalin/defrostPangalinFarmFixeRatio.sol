@@ -12,8 +12,13 @@ interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
 }
 
+
 interface IReleaseSC {
-    function inputForRelease(address account,uint256 amount) external;
+    function releaseToken(address account,uint256 amount) external;
+    function getClaimAbleBalance(address account) external view returns (uint256);
+    function dispatchTimes() external view returns (uint256);
+    function lockedBalanceOf(address account) external view returns(uint256);
+    function userFarmClaimedBalances(address account) external view returns (uint256);
 }
 
 interface ILpToken {
@@ -719,7 +724,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         }
         if(userRward>0) {
             IERC20(rewardToken).approve(releaseSc,userRward);
-            IReleaseSC(releaseSc).inputForRelease(_user,userRward);
+            IReleaseSC(releaseSc).releaseToken(_user,userRward);
         }
     }
 
@@ -736,12 +741,14 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
         claimable = deFrostReward.div(distimes).add(claimable);
 
+        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user);
+        locked = locked.add(deFrostReward.sub(claimable));
+
         uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
-        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user).add(deFrostReward.sub(claimable));
+
 
         return (depositAmount,claimable,locked,claimed,joeReward);
-
-    }    
+    }
 
 }
 
