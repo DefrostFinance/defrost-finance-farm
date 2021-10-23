@@ -723,6 +723,26 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage {
         }
     }
 
+
+    function getRewardInfo(uint256 _pid,address _user)  public view returns(uint256,uint256,uint256,uint256,uint256) {
+        uint256 depositAmount;
+        uint256 deFrostReward;
+        uint256 joeReward;
+
+        (depositAmount,deFrostReward,joeReward) = allPendingReward(_pid,_user);
+
+        uint256 distimes = IReleaseSC(releaseSc).dispatchTimes();
+
+        uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
+        claimable = deFrostReward.div(distimes).add(claimable);
+
+        uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
+        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user).add(deFrostReward.sub(claimable));
+
+        return (depositAmount,claimable,locked,claimed,joeReward);
+
+    }    
+
 }
 
 
