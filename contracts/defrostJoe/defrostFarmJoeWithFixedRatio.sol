@@ -1,13 +1,10 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 import "./defrostFarmJoeStorage.sol";
-import "../IERC20.sol";
-import "../SafeMath.sol";
-import "../SafeERC20.sol";
-
-
-interface IOracle {
-    function getPrice(address asset) external view returns (uint256);
-}
+import "../modules/IERC20.sol";
+import "../modules/SafeMath.sol";
+import "../modules/safeErc20.sol";
 
 interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
@@ -21,21 +18,6 @@ interface IReleaseSC {
     function userFarmClaimedBalances(address account) external view returns (uint256);
 }
 
-interface ILpToken {
-    function totalSupply() external view returns (uint256);
-    function decimals() external view returns (uint8);
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-}
-
-interface IDecimals {
-    function decimals() external view returns (uint8);
-}
-
-//uint256 pendingJoe,
-//address bonusTokenAddress,
-//string memory bonusTokenSymbol,
-//uint256 pendingBonusToken
 
 interface IChef {
     function deposit(uint256 _pid, uint256 _amount) external;

@@ -1,13 +1,14 @@
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.7.0;
 
-import "../SafeMath.sol";
-import "../IERC20.sol";
-import "../Halt.sol";
-import "../multiSignatureClient.sol";
-import "../Operator.sol";
-import "../ReentrancyGuard.sol";
-import "./TokenFarm.sol";
+import "../modules/SafeMath.sol";
+import "../modules/IERC20.sol";
+import "../modules/Halt.sol";
+import "../modules/multiSignatureClient.sol";
+import "../modules/proxyOperator.sol";
+import "../modules/ReentrancyGuard.sol";
+
 import "./LPTokenWrapper.sol";
 
 contract H2oFarmH2oMelt  is LPTokenWrapper,multiSignatureClient,Operator,Halt,ReentrancyGuard{

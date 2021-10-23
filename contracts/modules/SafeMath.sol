@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.7.0;
 
 /**
@@ -153,5 +153,14 @@ library SafeMath {
     function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
+    }
+    uint256 constant internal calDecimal = 1e18; 
+    function mulPrice(uint256 value,uint256[2] memory prices,uint8 id)internal pure returns(uint256){
+        return id == 0 ? div(mul(mul(prices[1],value),calDecimal),prices[0]) :
+            div(mul(mul(prices[0],value),calDecimal),prices[1]);
+    }
+    function divPrice(uint256 value,uint256[2] memory prices,uint8 id)internal pure returns(uint256){
+        return id == 0 ? div(div(mul(prices[0],value),calDecimal),prices[1]) :
+            div(div(mul(prices[1],value),calDecimal),prices[0]);
     }
 }

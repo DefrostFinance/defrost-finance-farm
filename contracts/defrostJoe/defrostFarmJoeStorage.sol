@@ -1,9 +1,9 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
 
-import "../Halt.sol";
-import "../ReentrancyGuard.sol";
-import "../multiSignatureClient.sol";
-import "../Operator.sol";
+pragma solidity ^0.7.0;
+
+import "../modules/Halt.sol";
+import "../modules/ReentrancyGuard.sol";
 
 contract deFrostFarmErrorReporter {
     enum Error {
@@ -43,7 +43,7 @@ contract deFrostFarmErrorReporter {
     }
 }
 
-contract defrostFarmJoeStorage is multiSignatureClient,Operator,Halt, ReentrancyGuard{
+contract defrostFarmJoeStorage is Halt, ReentrancyGuard{
     // Info of each user.
     struct UserInfo {
         uint256 amount;     // How many LP tokens the user has provided.

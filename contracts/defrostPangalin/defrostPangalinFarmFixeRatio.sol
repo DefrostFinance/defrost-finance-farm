@@ -1,12 +1,11 @@
-pragma solidity 0.5.16;
-import "./defrostPangalinStorage.sol";
-import "../IERC20.sol";
-import "../SafeMath.sol";
-import "../SafeERC20.sol";
+// SPDX-License-Identifier: MIT
 
-interface IOracle {
-    function getPrice(address asset) external view returns (uint256);
-}
+pragma solidity ^0.7.0;
+import "./defrostPangalinStorage.sol";
+import "../modules/IERC20.sol";
+import "../modules/SafeMath.sol";
+import "../modules/safeErc20.sol";
+
 
 interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
@@ -21,20 +20,6 @@ interface IReleaseSC {
     function userFarmClaimedBalances(address account) external view returns (uint256);
 }
 
-interface ILpToken {
-    function totalSupply() external view returns (uint256);
-    function decimals() external view returns (uint8);
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-}
-
-interface IMint {
-    function mint(address account, uint256 amount) external;
-}
-
-interface IDecimals {
-    function decimals() external view returns (uint8);
-}
 
 interface IPangalinFarm {
     function getReward() external;

@@ -1,9 +1,11 @@
-pragma solidity 0.5.16;
+// SPDX-License-Identifier: MIT
 
-import "../Halt.sol";
-import "../ReentrancyGuard.sol";
-import "../multiSignatureClient.sol";
-import "../Operator.sol";
+pragma solidity ^0.7.0;
+
+import "../modules/Halt.sol";
+import "../modules/ReentrancyGuard.sol";
+import "../modules/multiSignatureClient.sol";
+import "../modules/proxyOperator.sol";
 
 contract defrostFarmErrorReporter {
     enum Error {

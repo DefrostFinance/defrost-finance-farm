@@ -1,4 +1,8 @@
-// SPDX-License-Identifier: MIT
+/**
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * defrost
+ * Copyright (C) 2020 defrost Options Protocol
+ */
 pragma solidity ^0.7.0;
 
 /**
@@ -6,6 +10,9 @@ pragma solidity ^0.7.0;
  * the optional functions; to access them see {ERC20Detailed}.
  */
 interface IERC20 {
+    function decimals() external view returns (uint8);
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -60,6 +67,16 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+
+      /**
+     * EXTERNAL FUNCTION
+     *
+     * @dev change token name
+     * @param _name token name
+     * @param _symbol token symbol
+     *
+     */
+    function changeTokenName(string calldata _name, string calldata _symbol)external;
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
