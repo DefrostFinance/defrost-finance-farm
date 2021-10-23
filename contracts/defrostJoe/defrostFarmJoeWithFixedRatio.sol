@@ -767,7 +767,8 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage {
         claimable = deFrostReward.div(distimes).add(claimable);
 
         uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
-        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user);
+        uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user).add(deFrostReward.sub(claimable));
+
         return (depositAmount,claimable,locked,claimed,joeReward);
 
     }

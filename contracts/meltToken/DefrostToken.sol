@@ -1,9 +1,7 @@
 pragma solidity ^0.5.16;
 import './StardardToken.sol';
-import '../Operator.sol';
-import "../multiSignatureClient.sol";
 
-contract DefrostToken is StandardToken20,Operator,multiSignatureClient{
+contract DefrostToken is StandardToken20{
     using SafeMath for uint;
 
     string private name_;
@@ -25,9 +23,7 @@ contract DefrostToken is StandardToken20,Operator,multiSignatureClient{
                 uint256 tokenDecimal,
                 address initHolder,
                 address reserveHolder,
-                address businessHolder,
-                address multiSig)
-        multiSignatureClient(multiSig)
+                address businessHolder)
         public
     {
         name_ = tokenName;
@@ -58,17 +54,6 @@ contract DefrostToken is StandardToken20,Operator,multiSignatureClient{
      */
     function decimals() public view returns (uint8) {
         return decimals_;
-    }
-
-
-    function changeTokenName(string memory tokenName, string memory tokenSymbol)
-        public
-        onlyOperator(0)
-        validCall
-    {
-        //check parameter in ico minter contract
-        name_ = tokenName;
-        symbol_ = tokenSymbol;
     }
 
 }
