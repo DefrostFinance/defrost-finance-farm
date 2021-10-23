@@ -1,9 +1,7 @@
-// SPDX-License-Identifier: MIT
+pragma solidity =0.5.16;
 
-pragma solidity ^0.7.0;
-
-import "../modules/SafeMath.sol";
-import "../modules/IERC20.sol";
+import "../SafeMath.sol";
+import "../IERC20.sol";
 
 contract LPTokenWrapper {
 

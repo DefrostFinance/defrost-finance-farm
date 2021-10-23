@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
-import "../modules/Operator.sol";
+pragma solidity =0.5.16;
+import "../Operator.sol";
 
 contract Oracle is Operator {
     mapping(uint256 => uint256) internal priceMap;

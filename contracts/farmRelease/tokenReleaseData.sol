@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
-import "../modules/Halt.sol";
+pragma solidity ^0.5.16;
+import "../Halt.sol";
 
 contract tokenReleaseData is Halt {
     uint256 constant internal currentVersion = 2;

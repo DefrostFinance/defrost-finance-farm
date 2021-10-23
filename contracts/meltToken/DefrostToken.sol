@@ -1,6 +1,4 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
+pragma solidity ^0.5.16;
 import './StardardToken.sol';
 
 contract DefrostToken is StandardToken20{

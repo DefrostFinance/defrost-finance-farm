@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
+pragma solidity 0.5.16;
 import "../defrostJoe/defrostFarmJoeStorage.sol";
-import "../modules/IERC20.sol";
-import "../modules/SafeMath.sol";
-import "../modules/safeErc20.sol";
+import "../IERC20.sol";
+import "../SafeMath.sol";
+import "../SafeERC20.sol";

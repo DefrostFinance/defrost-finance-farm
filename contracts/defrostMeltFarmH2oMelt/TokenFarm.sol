@@ -1,15 +1,14 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
+pragma solidity ^0.5.16;
 
 import "./TokenFarmData.sol";
-import "../modules/Halt.sol";
-import "../modules/ReentrancyGuard.sol";
-import "../modules/proxyOperator.sol";
-import "../modules/Ownable.sol";
-import "../modules/SafeMath.sol";
-import "../modules/IERC20.sol";
-import "../modules/Address.sol";
+import "../Halt.sol";
+import "../ReentrancyGuard.sol";
+import "../Operator.sol";
+import "../Admin.sol";
+import "../Ownable.sol";
+import "../SafeMath.sol";
+import "../IERC20.sol";
+import "../Address.sol";
 
 contract TokenFarm is Halt,TokenFarmData {
     using SafeMath for uint256;

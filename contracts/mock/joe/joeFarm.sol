@@ -1,6 +1,8 @@
+// File: @openzeppelin/contracts/token/ERC20/IERC20.sol
+
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.5.16;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -1292,7 +1294,7 @@ contract JoeToken is ERC20("JoeToken", "JOE"), Ownable {
     // Which is copied and modified from COMPOUND:
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
-
+    /// @notice A record of each accounts delegate
     mapping(address => address) internal _delegates;
 
     /// @notice A checkpoint for marking number of votes from a given block

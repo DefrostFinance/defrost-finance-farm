@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
-import "../modules/Halt.sol";
-import "../modules/multiSignatureClient.sol";
-import "../modules/proxyOperator.sol";
+pragma solidity =0.5.16;
+import "../Halt.sol";
+import "../Admin.sol";
+import "../multiSignatureClient.sol";
+import "../Operator.sol";
 
 contract defrostTeamDistributeStorage is Halt,Operator,multiSignatureClient {
     uint256 RATIO_DENOM = 100;

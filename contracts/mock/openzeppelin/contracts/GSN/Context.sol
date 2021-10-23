@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.7.0;
+pragma solidity ^0.5.16;
 
 /*
  * @dev Provides information about the current execution context, including the

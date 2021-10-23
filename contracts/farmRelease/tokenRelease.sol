@@ -1,9 +1,7 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
+pragma solidity =0.5.16;
 import "./tokenReleaseData.sol";
-import "../modules/SafeMath.sol";
-import "../modules/IERC20.sol";
+import "../SafeMath.sol";
+import "../IERC20.sol";
 
 /**
  * @title FPTCoin is finnexus collateral Pool token, implement ERC20 interface.
