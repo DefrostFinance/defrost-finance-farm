@@ -1,5 +1,5 @@
 pragma solidity =0.5.16;
-import "../Operator.sol";
+import "../modules/Operator.sol";
 
 contract Oracle is Operator {
     mapping(uint256 => uint256) internal priceMap;

@@ -1,8 +1,8 @@
-pragma solidity 0.5.16;
+pragma solidity ^0.5.16;
 import "./defrostFarmJoeStorage.sol";
-import "../IERC20.sol";
-import "../SafeMath.sol";
-import "../SafeERC20.sol";
+import "../modules/IERC20.sol";
+import "../modules/SafeMath.sol";
+import "../modules/SafeERC20.sol";
 
 
 interface IOracle {

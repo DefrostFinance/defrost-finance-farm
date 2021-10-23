@@ -1,9 +1,9 @@
 pragma solidity 0.5.16;
 
-import "../Halt.sol";
-import "../ReentrancyGuard.sol";
-import "../multiSignatureClient.sol";
-import "../Operator.sol";
+import "../modules/Halt.sol";
+import "../modules/ReentrancyGuard.sol";
+import "../modules/multiSignatureClient.sol";
+import "../modules/Operator.sol";
 
 contract deFrostFarmErrorReporter {
     enum Error {

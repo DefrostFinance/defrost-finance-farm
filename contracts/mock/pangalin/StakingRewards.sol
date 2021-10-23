@@ -5,7 +5,7 @@ import "../openzeppelin/contracts/math/Math.sol";
 import "../openzeppelin/contracts/math/SafeMath.sol";
 import "../openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "../../IERC20.sol";
+import "../../modules/IERC20.sol";
 
 
 // https://docs.synthetix.io/contracts/source/contracts/stakingrewards

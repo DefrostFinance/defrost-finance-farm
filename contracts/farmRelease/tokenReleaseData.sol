@@ -1,5 +1,5 @@
 pragma solidity ^0.5.16;
-import "../Halt.sol";
+import "../modules/Halt.sol";
 
 contract tokenReleaseData is Halt {
     uint256 constant internal currentVersion = 2;

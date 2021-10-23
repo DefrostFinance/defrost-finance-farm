@@ -1,7 +1,7 @@
-pragma solidity =0.5.16;
+pragma solidity ^0.5.16;
 
-import "../SafeMath.sol";
-import "../IERC20.sol";
+import "../modules/SafeMath.sol";
+import "../modules/IERC20.sol";
 
 contract LPTokenWrapper {
 
