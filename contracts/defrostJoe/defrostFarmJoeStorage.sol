@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity ^0.5.16;
 
 import "../modules/Halt.sol";
 import "../modules/ReentrancyGuard.sol";

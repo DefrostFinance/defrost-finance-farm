@@ -1,4 +1,4 @@
-pragma solidity =0.5.16;
+pragma solidity ^0.5.16;
 interface IMultiSignature{
     function getValidSignature(bytes32 msghash,uint256 lastIndex) external view returns(uint256);
 }

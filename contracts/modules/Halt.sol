@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity ^0.5.16;
 import "./Ownable.sol";
 
 contract Halt is Ownable {
