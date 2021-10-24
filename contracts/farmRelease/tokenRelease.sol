@@ -26,7 +26,7 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
     /**
      * @dev constructor function. set phx minePool contract address. 
      */ 
-    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) onlyOrigin public{
+    function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) OwnerOrOrigin public{
         if (_meltAddress != address(0))
             meltAddress = _meltAddress;
             

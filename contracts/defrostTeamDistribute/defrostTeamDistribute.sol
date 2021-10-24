@@ -38,7 +38,7 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
                                 uint256[] memory ratio)
         public
         inited
-        onlyOrigin
+        OwnerOrOrigin
     {
         require(users.length==ratio.length);
         uint256 totalRatio = 0;

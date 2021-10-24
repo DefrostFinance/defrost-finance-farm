@@ -40,7 +40,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
         }
     }
 
-    function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public onlyOrigin{
+    function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public OwnerOrOrigin{
         require(_pid<REWARD_NUM);
         require(_reward>0);
         require(_duration>0);
@@ -48,7 +48,7 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
         tokenFarms[rewardTokens[_pid]].setMineRate(_reward,_duration);
     }
 //
-    function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public onlyOrigin {
+    function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public OwnerOrOrigin {
          require(_pid<REWARD_NUM);
          require(_startime>now);
          require(_endtime>_startime);

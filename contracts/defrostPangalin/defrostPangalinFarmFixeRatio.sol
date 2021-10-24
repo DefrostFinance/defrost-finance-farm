@@ -630,7 +630,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
         address _usx,
         address _teamRewardSc,
         address _releaseSc)
-       public onlyOrigin
+       public OwnerOrOrigin
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
         require(_oracle!=address(0),"_rewardToken address is 0");
@@ -663,20 +663,20 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
 
 
     function setFixedTeamRatio(uint256 _ratio)
-    public onlyOrigin
+    public OwnerOrOrigin
     {
         fixedTeamRatio = _ratio;
     }
 
     function setFixedWhitelistRatio(uint256 _ratio)
-    public onlyOrigin
+    public OwnerOrOrigin
     {
         fixedWhitelistRatio = _ratio;
     }
 
     function setWhiteList(address[] memory _user,
         uint256[] memory _amount)
-    public onlyOrigin
+    public OwnerOrOrigin
     {
         require(_user.length==_amount.length,"array length is not equal");
         for(uint256 i=0;i<_amount.length;i++) {
