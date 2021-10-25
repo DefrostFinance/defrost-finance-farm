@@ -121,7 +121,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
                  uint256 _totalMineReward,
                  uint256 _duration,
                  uint256 _secPerBlk
-             ) public onlyOrigin {
+             ) public OwnerOrOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
         //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
@@ -173,7 +173,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
                             uint256 _totalMineReward,
                             uint256 _duration)
             public
-            onlyOrigin
+            OwnerOrOrigin
     {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(_bonusEndBlock > block.number, "_bonusEndBlock <= block.number");
@@ -250,7 +250,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         return allTotalUnclaimed;
     }
 
-    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public onlyOrigin {
+    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public OwnerOrOrigin {
 
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
@@ -307,7 +307,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         return (depositAmount, deFrostReward, joeReward);
     }
 
-    function enableDoubleFarming(uint256 _pid, bool enable) public onlyOrigin {
+    function enableDoubleFarming(uint256 _pid, bool enable) public OwnerOrOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -345,7 +345,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
 
     }
 
-    function setDoubleFarming(uint256 _pid,address extFarmAddr,uint256 _extPid) public onlyOrigin {
+    function setDoubleFarming(uint256 _pid,address extFarmAddr,uint256 _extPid) public OwnerOrOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
@@ -365,7 +365,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
 
     }
 
-    function disableExtEnableClaim(uint256 _pid)public onlyOrigin {
+    function disableExtEnableClaim(uint256 _pid)public OwnerOrOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -695,7 +695,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
     }
 
     function setWhiteListMemberStatus(address _user,bool _status)
-        public OwnerOrOrigin
+        public onlyOrigin
     {
         whiteListLpUserInfo[_user] = _status;
     }
@@ -722,6 +722,8 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         userRward = userRward.sub(teamReward);
 
         return (userRward,teamReward);
+
+        //return (_reward,0);
     }
 
     function mintUserRewardAndTeamReward(uint256 _pid,address _user, uint256 _reward) internal {
@@ -755,11 +757,11 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
 
         uint256 distimes = IReleaseSC(releaseSc).dispatchTimes();
 
-        uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
-        claimable = deFrostReward.div(distimes).add(claimable);
-
+        uint256 claimable = deFrostReward.div(distimes);
         uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user);
         locked = locked.add(deFrostReward.sub(claimable));
+
+        claimable = claimable.add(IReleaseSC(releaseSc).getClaimAbleBalance(_user));
 
         uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
 

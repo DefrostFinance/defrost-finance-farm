@@ -90,7 +90,7 @@ contract proxyOwner is multiSignatureClient{
         return  msg.sender == _origin0 || msg.sender == _origin1;
     }
     function isOwner() public view returns (bool) {
-        return msg.sender == owner() && isContract(msg.sender);
+        return msg.sender == owner();//&& isContract(msg.sender);
     }
     /**
     * @dev Throws if called by any account other than the owner.
@@ -102,6 +102,10 @@ contract proxyOwner is multiSignatureClient{
     }
     modifier OwnerOrOrigin(){
         if (isOwner()){
+            //allow owner to set once
+            uint256 key = oncePosition+uint32(msg.sig);
+            require (getValue(bytes32(key))==0, "proxyOwner : This function must be invoked only once!");
+            saveValue(bytes32(key),1);
         }else if(isOrigin()){
             checkMultiSignature();
         }else{

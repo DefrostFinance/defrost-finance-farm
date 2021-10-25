@@ -1,5 +1,5 @@
 const { time, expectEvent} = require("@openzeppelin/test-helpers");
-const PoolProxy = artifacts.require('deforestFarmJoeProxy');
+
 const MinePool = artifacts.require('defrostFarmJoeFixedRatio');
 
 const TokenRelease = artifacts.require('tokenRelease');
@@ -10,7 +10,6 @@ const WethToken = artifacts.require('LpToken');
 const Oracle = artifacts.require('Oracle');
 
 const TeamDistribute = artifacts.require('TeamDistribute');
-const TeamDistributeProxy = artifacts.require('DefrostTeamDistributeProxy');
 
 const MeltToken = artifacts.require("DefrostToken");
 const MultiSignature = artifacts.require("multiSignature");
@@ -39,22 +38,23 @@ contract('MinePoolProxy', function (accounts){
 
     let staker1 = accounts[2];
     let staker2 = accounts[3];
+    let staker3 = accounts[6];
 
     let teamMember1 = accounts[4];
     let teamMember2 = accounts[5];
     let teammems = [teamMember1,teamMember2];
     let teammemsRatio = [20,80];
 
-    let operator0 = accounts[0];
-    let operator1 = accounts[1]
-
     let disSpeed1 = web3.utils.toWei('1', 'ether');
 
-    let VAL_1M = web3.utils.toWei('1000000', 'ether');
+    //let VAL_1M = web3.utils.toWei('1000000', 'ether');
     let VAL_10M = web3.utils.toWei('10000000', 'ether');
+    let VAL_99M = web3.utils.toWei(  '99999999', 'ether');
     let VAL_100M = web3.utils.toWei('100000000', 'ether');
-    let VAL_1B = web3.utils.toWei('1000000000', 'ether');
+    let VAL_1B = web3.utils.toWei(  '1000000000', 'ether');
     let VAL_10B = web3.utils.toWei('10000000000', 'ether');
+
+    let WITHTELIST_MINIMUM = VAL_100M ;
 
     let minutes = 60;
     let hour    = 60*60;
@@ -104,10 +104,10 @@ contract('MinePoolProxy', function (accounts){
 
     async function enablePngDoubleFarm(){
 
-        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefInst.address,0,{from:operator1});
+        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefInst.address,0);
         assert.equal(res.receipt.status,true);
 
-        res = await farmproxyinst.enableDoubleFarming(0,true,{from:operator1});
+        res = await farmproxyinst.enableDoubleFarming(0,true);
         assert.equal(res.receipt.status,true);
         console.log("setting end")
     }
@@ -123,33 +123,34 @@ contract('MinePoolProxy', function (accounts){
 //////////////////////LP POOL SETTING///////////////////////////////////////////////////
         lp = await LpToken.new("lptoken",18);
 
-        await lp.mint(staker1,VAL_1M);
-        await lp.mint(staker2,VAL_1M);
+        await lp.mint(staker1,VAL_1B);
+        await lp.mint(staker2,VAL_1B);
+        await lp.mint(staker3,VAL_1B);
 
         usx = await LpToken.new("usx",18);
-        await usx.mint(lp.address,VAL_1M);
+        await usx.mint(lp.address,VAL_1B);
 
         usdc = await WethToken.new("lptoken",18);
-        await usdc.mint(lp.address,VAL_1M);
+        await usdc.mint(lp.address,VAL_1B);
 
         await lp.setReserve(usx.address,usdc.address);
 /////////////////////////////reward token///////////////////////////////////////////
-        melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2],mulSiginst.address);
+        melt = await MeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2]);
 
 /////////////////////////////////init token release//////////////////////////////////////////////////////
-        tokenReleaseInt = await TokenRelease.new();
-        res = await tokenReleaseInt.setParameter(melt.address,day,6,200,day);
+        tokenReleaseInt = await TokenRelease.new(mulSiginst.address,accounts[8],accounts[9]);
+        let owner = await tokenReleaseInt.owner();
+        console.log("owner check",owner,accounts[0]);
+
+        res = await tokenReleaseInt.setParameter(melt.address,day,6,200,day,{from:accounts[0]});
         assert.equal(res.receipt.status,true);
 //set farm///////////////////////////////////////////////////////////
-        farminst = await MinePool.new(mulSiginst.address);
+        farminst = await MinePool.new(mulSiginst.address,accounts[8],accounts[9]);
         console.log("pool address:", farminst.address);
 
         farmproxyinst = farminst;
         //await PoolProxy.new(farminst.address,melt.address,mulSiginst.address);
         console.log("proxy address:",farmproxyinst.address);
-        //set operator 0
-        await farmproxyinst.setOperator(0,operator0);
-        await farmproxyinst.setOperator(1,operator1);
 
         // farmproxyinst = await MinePool.at(farmproxyinst.address);
         // console.log("proxy address:" + farmproxyinst.address);
@@ -166,24 +167,18 @@ contract('MinePoolProxy', function (accounts){
             disSpeed1,
             rewardOneDay,
             24*3600,
-            5,{from:operator1});
+            5);
         assert.equal(res.receipt.status,true);
 
 //  res = await farmproxyinst.setOperator(1,accounts[0]);
 //  assert.equal(res.receipt.status,true);
 /////////////////////////////////team reward sc set////////////////////////////
         console.log("team reward sc set");
-        teamReward = await TeamDistribute.new(mulSiginst.address,melt.address);
+        teamReward = await TeamDistribute.new(mulSiginst.address,accounts[8],accounts[9],melt.address);
 
         // let teamProxy = await TeamDistributeProxy.new(teamReward.address,melt.address,mulSiginst.address);
         // teamReward = await TeamDistribute.at(teamProxy.address);
 
-        //set operator for setting
-        res = await teamReward.setOperator(0,accounts[0]);
-        assert.equal(res.receipt.status,true);
-        //set contract to mint
-        res = await teamReward.setOperator(1,farmproxyinst.address);
-        assert.equal(res.receipt.status,true);
 
         res = await teamReward.setMultiUsersInfo(teammems,teammemsRatio);
         assert.equal(res.receipt.status,true);
@@ -198,51 +193,61 @@ contract('MinePoolProxy', function (accounts){
                                                     oracleinst.address,
                                                     usx.address,
                                                     teamReward.address,
-                                                    tokenReleaseInt.address,
-                                                    {from:operator1});
+                                                    tokenReleaseInt.address);
 
         assert.equal(res.receipt.status,true);
 
         //set whitelist ratio
-        res = await farmproxyinst.setFixedWhitelistRatio(200,{from:operator1});
+        res = await farmproxyinst.setFixedWhitelistPara(200,WITHTELIST_MINIMUM);
         assert.equal(res.receipt.status,true);
 
         //set whitelist
-        res = await farmproxyinst.setWhiteList([staker1,staker2],[1,1],{from:operator1});
+        res = await farmproxyinst.setWhiteList([staker1,staker2]);
         assert.equal(res.receipt.status,true);
 
         //set team ratio
         // res = await farmproxyinst.setTeamRewardRatio([0,VAL_1M,VAL_10M,VAL_1B,VAL_10B],[10,35,5,6,65],{from:operator1});
         // assert.equal(res.receipt.status,true);
 
-        res = await farmproxyinst.setFixedTeamRatio(10,{from:operator1});
+        res = await farmproxyinst.setFixedTeamRatio(10);
 /////////////////////////////////init//////////////////////////////////////////////////////
         console.log("init double farm");
         await initPngDoubleFarm();
         await enablePngDoubleFarm();
 
-
-
 ///////////////////////test setting/////////////////////////////////////////////////////
         res = await oracleinst.setPrice(usdc.address,100000000);//usdc one dollar
-
 
         console.log("normall setting end");
     })
 
     it("[0010] stake in,should pass", async()=>{
         ////////////////////////staker1///////////////////////////////////////////////////////////
-        res = await lp.approve(farmproxyinst.address,VAL_1M,{from:staker1});
+        res = await lp.approve(farmproxyinst.address,VAL_1B,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        res = await lp.approve(farmproxyinst.address,VAL_1B,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        res = await lp.approve(farmproxyinst.address,VAL_1B,{from:staker3});
         assert.equal(res.receipt.status,true);
 
         // res = await lp.approve(joeStakeRewardInt.address,VAL_1M,{from:staker1});
         // assert.equal(res.receipt.status,true);
 
-        time.increaseTo(startTime+1);
+        time.increaseTo(startTime+100);
 
         let preBal = await joeToken.balanceOf(farmproxyinst.address);
         console.log("prebalance=",preBal.toString(10));
-        res = await farmproxyinst.deposit(0,VAL_1M,{from:staker1});
+        res = await farmproxyinst.deposit(0,VAL_100M,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        utils.sleep(1000);
+        res = await farmproxyinst.deposit(0,VAL_100M,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        utils.sleep(1000);
+        res = await farmproxyinst.deposit(0,VAL_99M,{from:staker3});
         assert.equal(res.receipt.status,true);
 
         let afterBal = await joeToken.balanceOf(farmproxyinst.address);
@@ -252,14 +257,14 @@ contract('MinePoolProxy', function (accounts){
         console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),
             mineInfo[2].toString(10),mineInfo[3].toString(10));
 /////////////////////////////////////////////////////////////////////////////////
-        time.increaseTo(startTime+1000);
-        await lp.approve(farmproxyinst.address,VAL_1M,{from:staker2});
-        res = await farmproxyinst.deposit(0,VAL_1M,{from:staker2});
-        assert.equal(res.receipt.status,true);
-
-        mineInfo = await farmproxyinst.getMineInfo(0);
-        console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),
-            mineInfo[2].toString(10),mineInfo[3].toString(10));
+//         time.increaseTo(startTime+1000);
+//         await lp.approve(farmproxyinst.address,VAL_1B,{from:staker2});
+//         res = await farmproxyinst.deposit(0,VAL_1M,{from:staker2});
+//         assert.equal(res.receipt.status,true);
+//
+//         mineInfo = await farmproxyinst.getMineInfo(0);
+//         console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),
+//             mineInfo[2].toString(10),mineInfo[3].toString(10));
 
         let block = await web3.eth.getBlock(mineInfo[2]);
         console.log("start block time",block.timestamp);
@@ -269,7 +274,7 @@ contract('MinePoolProxy', function (accounts){
 
     it("[0020] check staker1 mined balance,should pass", async()=>{
         console.log("====================================================================================")
-        time.increaseTo(startTime+2000);
+        time.increase(200000);
         let res = await farmproxyinst.totalStaked(0);
         console.log("totalstaked=" + res);
 
@@ -277,7 +282,13 @@ contract('MinePoolProxy', function (accounts){
         console.log("blocknum1=" + block.number)
 
         res = await farmproxyinst.allPendingReward(0,staker1)
-        console.log("allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+        console.log("staker1 allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.allPendingReward(0,staker2)
+        console.log("staker2 allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.allPendingReward(0,staker3)
+        console.log("staker3 allpending=", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.getPoolInfo(0)
         console.log("poolinf=",res[0].toString(),res[1].toString(),res[2].toString(),
@@ -295,15 +306,28 @@ contract('MinePoolProxy', function (accounts){
 
         let preBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
         let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
-
+        let preBalance2 = web3.utils.fromWei(await melt.balanceOf(staker2));
+        let preBalance3 = web3.utils.fromWei(await melt.balanceOf(staker3));
         //res = await farmproxyinst.getAllClaimableReward(0,staker1)
         //console.log("all claimable reward:", web3.utils.fromWei(res[0]),web3.utils.fromWei(res[1]),web3.utils.fromWei(res[2]));
 
         res = await farmproxyinst.withdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
 
+        res = await farmproxyinst.withdraw(0,0,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        res = await farmproxyinst.withdraw(0,0,{from:staker3});
+        assert.equal(res.receipt.status,true);
+
         let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
         console.log("staker1 melt reward=" + (afterBalance - preBalance));
+
+        let afterBalance2 = web3.utils.fromWei(await melt.balanceOf(staker2))
+        console.log("staker2 melt reward=" + (afterBalance2 - preBalance2));
+
+        let afterBalance3 = web3.utils.fromWei(await melt.balanceOf(staker3))
+        console.log("staker3 melt reward=" + (afterBalance3 - preBalance3));
 
         let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
         let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
@@ -505,8 +529,8 @@ contract('MinePoolProxy', function (accounts){
         let res = await tokenReleaseInt.setHalt(true);
         assert.equal(res.receipt.status,true);
 
-        res = await tokenReleaseInt.emergencyGetbackLeft({from:staker1});
-        assert.equal(res.receipt.status,true);
+       // res = await tokenReleaseInt.emergencyGetbackLeft();
+     //   assert.equal(res.receipt.status,true);
 
         //console.log(res);
         // res = await tokenReleaseInt.emergencyGetbackLeft({from:staker2});
