@@ -100,7 +100,7 @@ contract defrostFarmJoeStorage is Halt, ReentrancyGuard{
     uint256 whiteListRewardIncLevels;
     mapping (uint256 => whiteListRewardRatio)  public whiteListRewardIncInfo;
 
-    mapping (address => uint256) public whiteListLpUserInfo;
+    mapping (address => bool) public whiteListLpUserInfo;
 
     //use cPhx
     address public rewardToken;
@@ -108,6 +108,7 @@ contract defrostFarmJoeStorage is Halt, ReentrancyGuard{
     address public h2o;
     uint256 public fixedTeamRatio;
     uint256 public fixedWhitelistRatio;
+    uint256 public whiteListfloorLimit;
 
     address public teamRewardSc;
     address public releaseSc;

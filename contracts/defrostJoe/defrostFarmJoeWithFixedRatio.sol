@@ -227,7 +227,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         // return (user.amount, user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt));//orginal
        uint256 pendingReward = user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt);
 
-       (pendingReward,) = getUserRewardAndTeamReward(_user,pendingReward);
+       (pendingReward,) = getUserRewardAndTeamReward(_pid,_user,pendingReward);
 
        return (user.amount,pendingReward);
 
@@ -668,9 +668,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
            poolInfo[_pid].bonusStartBlock,poolInfo[_pid].rewardPerBlock);
     }
 
-    function getVersion() public pure returns (uint256) {
-        return 1;
-    }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
     function setFixedTeamRatio(uint256 _ratio)
@@ -679,31 +677,44 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         fixedTeamRatio = _ratio;
     }
 
-    function setFixedWhitelistRatio(uint256 _ratio)
+    function setFixedWhitelistPara(uint256 _incRatio,uint256 _whiteListfloorLimit)
        public OwnerOrOrigin
     {
-        fixedWhitelistRatio = _ratio;
+        //_incRatio,0 whiteList increase will stop
+        fixedWhitelistRatio = _incRatio;
+        whiteListfloorLimit = _whiteListfloorLimit;
     }
 
-    function setWhiteList(address[] memory _user,
-                          uint256[] memory _amount)
+    function setWhiteList(address[] memory _user)
         public OwnerOrOrigin
     {
-        require(_user.length==_amount.length,"array length is not equal");
-        for(uint256 i=0;i<_amount.length;i++) {
-            whiteListLpUserInfo[_user[i]] = _amount[i];
+        require(_user.length>0,"array length is 0");
+        for(uint256 i=0;i<_user.length;i++) {
+            whiteListLpUserInfo[_user[i]] = true;
         }
     }
 
+    function setWhiteListMemberStatus(address _user,bool _status)
+        public OwnerOrOrigin
+    {
+        whiteListLpUserInfo[_user] = _status;
+    }
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function getUserRewardAndTeamReward(address _user, uint256 _reward)
+    function getUserRewardAndTeamReward(uint256 _pid,address _user, uint256 _reward)
             public view returns(uint256,uint256)
     {
-       // return (_reward,0);
+        uint256 userIncRatio = RATIO_DENOM;
 
-        uint256 userIncRatio = whiteListLpUserInfo[_user]>0? fixedWhitelistRatio:0;
-        userIncRatio += RATIO_DENOM;
+        UserInfo storage user = userInfo[_pid][_user];
+        //current stake must be over minimum require lp amount
+        if (whiteListLpUserInfo[_user]&&user.amount >= whiteListfloorLimit) {
+            userIncRatio = userIncRatio.add(fixedWhitelistRatio);
+        }
+
         uint256 userRward = _reward.mul(userIncRatio).div(RATIO_DENOM);
 
         uint256 teamReward = userRward.mul(fixedTeamRatio).div(RATIO_DENOM);
@@ -718,7 +729,7 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
         uint256 userRward = 0;
         uint256 teamReward = 0;
 
-        (userRward,teamReward) = getUserRewardAndTeamReward(_user,_reward);
+        (userRward,teamReward) = getUserRewardAndTeamReward(_pid,_user,_reward);
 
         if(teamReward>0) {
             IERC20(rewardToken).approve(teamRewardSc,teamReward);
