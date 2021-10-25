@@ -297,7 +297,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
         return (depositAmount, deFrostReward, extReward);
     }
 
-    function enableDoubleFarming(uint256 _pid, bool enable) public onlyOrigin {
+    function enableDoubleFarming(uint256 _pid, bool enable) public OwnerOrOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
         require(pool.extFarmInfo.extFarmAddr != address(0x0),"pool not supports double farming yet");
@@ -702,6 +702,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
         uint256 userRward = _reward.mul(userIncRatio).div(RATIO_DENOM);
 
         uint256 teamReward = userRward.mul(fixedTeamRatio).div(RATIO_DENOM);
+
         userRward = userRward.sub(teamReward);
 
         return (userRward,teamReward);
@@ -734,16 +735,17 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
 
         uint256 distimes = IReleaseSC(releaseSc).dispatchTimes();
 
-        uint256 claimable = IReleaseSC(releaseSc).getClaimAbleBalance(_user);
-        claimable = deFrostReward.div(distimes).add(claimable);
-
+        uint256 claimable = deFrostReward.div(distimes);
         uint256 locked = IReleaseSC(releaseSc).lockedBalanceOf(_user);
         locked = locked.add(deFrostReward.sub(claimable));
+
+        claimable = claimable.add(IReleaseSC(releaseSc).getClaimAbleBalance(_user));
 
         uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
 
 
         return (depositAmount,claimable,locked,claimed,joeReward);
+
     }
 
 }
