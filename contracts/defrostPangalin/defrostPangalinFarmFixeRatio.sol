@@ -129,7 +129,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
                  uint256 _totalMineReward,
                  uint256 _duration,
                  uint256 _secPerBlk
-             ) public onlyOrigin {
+             ) public OwnerOrOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
         //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
@@ -181,7 +181,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
                             uint256 _totalMineReward,
                             uint256 _duration)
             public
-            onlyOrigin
+            OwnerOrOrigin
     {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(_bonusEndBlock > block.number, "_bonusEndBlock <= block.number");
@@ -332,7 +332,7 @@ contract defrostPangalinFarmFixedRatio is defrostPangalinStorage, proxyOwner {
 
     }
 
-    function setDoubleFarming(uint256 _pid,address extFarmAddr,address rewardToken) public onlyOrigin {
+    function setDoubleFarming(uint256 _pid,address extFarmAddr,address rewardToken) public OwnerOrOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
