@@ -41,21 +41,19 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         OwnerOrOrigin
     {
         require(users.length==ratio.length);
-        uint256 totalRatio = 0;
-
-        userCount = 0;//reset to zero
         for(uint256 i=0;i<users.length;i++){
             require(users[i]!=address(0),"user address is 0");
             require(ratio[i]>0,"ratio should be bigger than 0");
-            require(ratio[i]<=RATIO_DENOM,"ratio should be bigger than 0");
+            require(ratio[i]<=100,"ratio should below 100");
 
-            totalRatio += ratio[i];
+            require(allUserIdx[users[i]]==0,"the user exist already");
+
             allUserIdx[users[i]] = userCount;
             allUserInfo[userCount] = userInfo(users[i],ratio[i],0,0,false);
             userCount++;
+            RATIO_DENOM += ratio[i];
         }
 
-        require(totalRatio==RATIO_DENOM);
     }
 
     function ressetUserRatio(address user,uint256 ratio)
@@ -63,7 +61,8 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         inited
         onlyOrigin
     {
-        require(ratio<RATIO_DENOM);
+        require(ratio<100,"ratio need to below 100");
+
         uint256 idx = allUserIdx[user];
         RATIO_DENOM -= allUserInfo[idx].ratio;
         RATIO_DENOM += ratio;

@@ -2,7 +2,7 @@ pragma solidity ^0.5.16;
 import "../modules/Halt.sol";
 
 contract defrostTeamDistributeStorage is Halt{
-    uint256 RATIO_DENOM = 100;
+    uint256 RATIO_DENOM = 0;// decimal is 100
     struct userInfo {
         address user;
         uint256 ratio;
