@@ -104,14 +104,18 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         public
         inited
     {
-        require(_amount>0);
-        IERC20(rewardToken).transferFrom(msg.sender,address(this),_amount);
+        if(_amount==0) {
+            return;
+        }
 
-        for(uint256 i=0;i<userCount;i++){
-            userInfo storage info = allUserInfo[i];
-            uint256 useramount = _amount.mul(info.ratio).div(RATIO_DENOM);
-            info.pendingAmount = info.pendingAmount.add(useramount);
-            info.wholeAmount = info.wholeAmount.add(useramount);
+        IERC20(rewardToken).transferFrom(msg.sender,address(this),_amount);
+        if(RATIO_DENOM>0) {
+            for(uint256 i=0;i<userCount;i++){
+                userInfo storage info = allUserInfo[i];
+                uint256 useramount = _amount.mul(info.ratio).div(RATIO_DENOM);
+                info.pendingAmount = info.pendingAmount.add(useramount);
+                info.wholeAmount = info.wholeAmount.add(useramount);
+            }
         }
     }
     
