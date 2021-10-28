@@ -42,6 +42,8 @@ contract('MinePoolProxy', function (accounts){
 
     let teamMember1 = accounts[4];
     let teamMember2 = accounts[5];
+    let teamMember3 = accounts[6];
+
     let teammems = [teamMember1,teamMember2];
     let teammemsRatio = [20,80];
 
@@ -509,7 +511,107 @@ contract('MinePoolProxy', function (accounts){
 
         console.log("teamMember1 reward got=",afterBalance1-preBalance1);
         console.log("teamMember2 reward got=",afterBalance2-preBalance2);
+    });
+
+
+    it("[0041] team changed member ratio and add memeber,should pass", async()=>{
+        res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved",async function() {
+            let res = await teamReward.setMultiUsersInfo([teamMember3], [20]);
+        })
+        assert.equal(res,false);
+
+        console.log("add team member");
+        let msgData =  teamReward.contract.methods.setMultiUsersInfo([teamMember3],[20]).encodeABI();
+        let hash = await utils.createApplication(mulSiginst,accounts[9],teamReward.address,0,msgData);
+
+        let index = await mulSiginst.getApplicationCount(hash);
+        index = index.toNumber()-1;
+        console.log(index);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
+        assert.equal(res.receipt.status,true);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+        assert.equal(res.receipt.status,true);
+
+        res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved",async function(){
+            await teamReward.setMultiUsersInfo([teamMember3],[20],{from:accounts[9]});
+        });
+        assert.equal(res,true,"should return true");
+
+    });
+
+
+    it("[0042] reset member ratio and add memeber,should pass", async()=>{
+        res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved",async function() {
+            let res = await teamReward.ressetUserRatio(teamMember2, 60);
+        });
+        assert.equal(res,false);
+
+        console.log("add team member");
+        let msgData =  teamReward.contract.methods.ressetUserRatio(teamMember2,60).encodeABI();
+        let hash = await utils.createApplication(mulSiginst,accounts[9],teamReward.address,0,msgData);
+
+        let index = await mulSiginst.getApplicationCount(hash);
+        index = index.toNumber()-1;
+        console.log(index);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[7]});
+        assert.equal(res.receipt.status,true);
+
+        res = await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+        assert.equal(res.receipt.status,true);
+
+        res = await utils.testSigViolation("multiSig ressetUserRatio: This tx is aprroved",async function(){
+            await teamReward.ressetUserRatio(teamMember2,60,{from:accounts[9]});
+        });
+
+        assert.equal(res,true,"should return true");
+
+    });
+
+//////////////////////////////////////////////////////////////////////////////////
+    it("[0043] check withdraw lp and team member reward,should pass", async()=>{
+        time.increase(20000);
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker2)
+        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        let stakeAmount = res[0];
+
+
+        let preTeamBalance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let preTeamBalance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+        let preTeamBalance3 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember3));
+
+        let preBalance = web3.utils.fromWei(await melt.balanceOf(staker2));
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+
+        let lpprebalance = web3.utils.fromWei(await lp.balanceOf(staker2));
+
+        res = await farmproxyinst.withdraw(0,0,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = web3.utils.fromWei(await melt.balanceOf(staker2))
+        console.log("staker2 melt reward=" + (afterBalance - preBalance));
+
+        let afterTeam1Balance1 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember1));
+        let afterTeam1Balance2 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember2));
+        let afterTeam1Balance3 = web3.utils.fromWei(await teamReward.claimableBalanceOf(teamMember3));
+        console.log("team member1 melt reward=" + (afterTeam1Balance1 - preTeamBalance1));
+        console.log("team member2 melt reward=" + (afterTeam1Balance2 - preTeamBalance2));
+        console.log("team member3 melt reward=" + (afterTeam1Balance3 - preTeamBalance3));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+        console.log("png reward=" + (pngpafterBalance - pngpreBalance));
+
+        let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker2));
+        console.log("lp get back=" + (lpafterbalance - lpprebalance));
+
     })
+
 //////////////////////////////////////////////////////////////////////////////////
     it("[0050] check locked and pending balance,should pass", async()=>{
         let rewardInfo = await farmproxyinst.getRewardInfo(0,staker1);
@@ -519,7 +621,9 @@ contract('MinePoolProxy', function (accounts){
         console.log("staker1 claimed",web3.utils.fromWei(rewardInfo[3]));
         console.log("staker1 extern reward",web3.utils.fromWei(rewardInfo[4]));
         console.log("====================================================================================")
-    })
+    });
+
+
 
     it("[0051] user withdraw reward in emergency,should pass", async()=>{
         let preBalance1 = web3.utils.fromWei(await melt.balanceOf(staker1));
