@@ -25,6 +25,10 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         rewardToken = _rewardToken;
     }
 
+    function setRewardToken(address _rewardToken)  public onlyOrigin {
+		rewardToken = _rewardToken;
+    } 
+	
     /**
      * @dev getting back the left mine token
      * @param reciever the reciever for getting back mine token
