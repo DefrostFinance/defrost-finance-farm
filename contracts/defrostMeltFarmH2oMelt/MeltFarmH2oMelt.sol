@@ -14,7 +14,7 @@ import "./TokenFarm.sol";
 
 contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
 
-    uint256 constant public REWARD_NUM = 2;
+    uint256 public REWARD_NUM = 2;
 
     address[] public rewardTokens;
     mapping(address=>TokenFarm) public tokenFarms;
@@ -27,10 +27,14 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
         proxyOwner(_multiSignature,origin0,origin1)
         public
     {
-        require(_rewardTokens.length==REWARD_NUM);
+       // require(_rewardTokens.length==REWARD_NUM);
 
         require(_multiSignature != address(0));
         require(_stakeToken != address(0));
+
+        if(REWARD_NUM != _rewardTokens.length) {
+            REWARD_NUM = _rewardTokens.length;
+        }
 
         stakeToken = _stakeToken;
         for(uint256 i=0;i<_rewardTokens.length;i++) {
@@ -40,14 +44,33 @@ contract H2oFarmH2oMelt  is LPTokenWrapper,proxyOwner,Halt,ReentrancyGuard{
         }
     }
 
+    function initMinePool(uint256[] memory _reward,uint256[] memory _duration,uint256[] memory _startime,uint256[] memory _endtime) public OwnerOrOrigin{
+
+        require(_reward.length==REWARD_NUM,"rewards length is not equal reward token number");
+        require(_reward.length==_duration.length,"reward array length is not equal");
+        require(_startime.length==REWARD_NUM,"start time array length is not equal");
+        require(_startime.length==_endtime.length,"end time array length is not equal");
+
+        for(uint256 i=0;i<REWARD_NUM;i++) {
+            require(_reward[i]>0);
+            require(_duration[i]>0);
+            tokenFarms[rewardTokens[i]].setMineRate(_reward[i],_duration[i]);
+
+            require(_startime[i]>0);
+            require(_endtime[i]>0);
+            tokenFarms[rewardTokens[i]].setPeriodFinish(_startime[i],_endtime[i]);
+        }
+    }
+
+
     function setMineRate(uint256 _pid,uint256 _reward,uint256 _duration) public OwnerOrOrigin{
         require(_pid<REWARD_NUM);
-        require(_reward>0);
+        //allow set reward to 0,then stop this reward
         require(_duration>0);
-
         tokenFarms[rewardTokens[_pid]].setMineRate(_reward,_duration);
     }
-//
+
+
     function setPeriodFinish(uint256 _pid,uint256 _startime,uint256 _endtime)public OwnerOrOrigin {
          require(_pid<REWARD_NUM);
          require(_startime>now);

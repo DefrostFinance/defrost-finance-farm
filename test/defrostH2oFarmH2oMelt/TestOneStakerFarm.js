@@ -7,7 +7,6 @@ const H2oToken = artifacts.require('LpToken');
 const Oracle = artifacts.require('Oracle');
 
 const TeamDistribute = artifacts.require('TeamDistribute');
-const TeamDistributeProxy = artifacts.require('DefrostTeamDistributeProxy');
 
 const RewardMeltToken = artifacts.require("DefrostToken");
 const MultiSignature = artifacts.require("multiSignature");
@@ -40,8 +39,8 @@ contract('MinePoolProxy', function (accounts){
   let teammems = [teamMember1,teamMember2];
   let teammemsRatio = [20,80];
 
-  let operator0 = accounts[0];
-  let operator1 = accounts[1]
+  let operator0 = accounts[7];
+  let operator1 = accounts[8]
 
   let disSpeed1 = web3.utils.toWei('1', 'ether');
 
@@ -83,16 +82,13 @@ contract('MinePoolProxy', function (accounts){
   await h2o.mint(staker2,VAL_1M);
 
 /////////////////////////////reward token///////////////////////////////////////////
-  melt = await RewardMeltToken.new("melt token","melt",18,mulSiginst.address,accounts[0],accounts[1],accounts[2]);
+  melt = await RewardMeltToken.new("melt token","melt",18,accounts[0],accounts[1],accounts[2]);
 
 //set phxfarm///////////////////////////////////////////////////////////
-  farminst = await MinePool.new(mulSiginst.address,h2o.address,[h2o.address,melt.address]);
+  farminst = await MinePool.new(mulSiginst.address,operator0,operator1,h2o.address,[h2o.address,melt.address]);
   console.log("pool address:", farminst.address);
 
   farmproxyinst = farminst;
-    //set operator 0
-  await farmproxyinst.setOperator(0,accounts[9]);
-  await farmproxyinst.setOperator(1,operator1);
 
 
   let block = await web3.eth.getBlock("latest");
@@ -102,23 +98,22 @@ contract('MinePoolProxy', function (accounts){
   let endTime = startTime + 3600*24*365;
 
   //h2o one secod 1 h2o
-  let res = await farminst.setMineRate(0, web3.utils.toWei(""+day),day);
-  assert.equal(res.receipt.status,true);
+  // let res = await farminst.setMineRate(0, web3.utils.toWei(""+day),day);
+  // assert.equal(res.receipt.status,true);
+  //
+  // res = await farminst.setPeriodFinish(0,startTime,endTime);
+  // assert.equal(res.receipt.status,true);
+  //
+  // res = await farminst.setMineRate(1, web3.utils.toWei(""+2*day),day);
+  // assert.equal(res.receipt.status,true);
+  //
+  // res = await farminst.setPeriodFinish(1,startTime,endTime);
+  // assert.equal(res.receipt.status,true);
 
-  res = await farminst.setPeriodFinish(0,startTime,endTime);
+  res = await farminst.initMinePool([web3.utils.toWei(""+day),web3.utils.toWei(""+2*day)],[day,day],[startTime,startTime],[endTime,endTime]);
   assert.equal(res.receipt.status,true);
-
-  res = await farminst.setMineRate(1, web3.utils.toWei(""+2*day),day);
-  assert.equal(res.receipt.status,true);
-
-  res = await farminst.setPeriodFinish(1,startTime,endTime);
-  assert.equal(res.receipt.status,true);
-
 
   ////////////////////////////////////////////////////////////////////////////////////////////
-  res = await melt.setOperator(0,accounts[0]);
-  assert.equal(res.receipt.status,true);
-
   res = await melt.transfer(farmproxyinst.address,VAL_10M,{from:accounts[0]});
   assert.equal(res.receipt.status,true);
 
@@ -215,10 +210,10 @@ contract('MinePoolProxy', function (accounts){
     it("[0050] get back left mining token,should pass", async()=>{
 
         let msgData = farmproxyinst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
-        let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
+        let hash = await utils.createApplication(mulSiginst,operator0,farmproxyinst.address,0,msgData);
 
         let res = await utils.testSigViolation("multiSig setUserPhxUnlockInfo: This tx is not aprroved",async function(){
-            await farmproxyinst.getbackLeftMiningToken(staker1,{from:accounts[9]});
+            await farmproxyinst.getbackLeftMiningToken(staker1,{from:operator0});
         });
         assert.equal(res,false,"should return false")
 
@@ -240,7 +235,7 @@ contract('MinePoolProxy', function (accounts){
         // res = await proxy.getbackLeftMiningToken(staker1,{from:accounts[9]});
         // assert.equal(res.receipt.status,true);
         res = await utils.testSigViolation("multiSig getback reward token: This tx is aprroved",async function(){
-            await farmproxyinst.getbackLeftMiningToken(staker1,{from:accounts[9]});
+            await farmproxyinst.getbackLeftMiningToken(staker1,{from:operator0});
         });
         assert.equal(res,true,"should return false")
 
