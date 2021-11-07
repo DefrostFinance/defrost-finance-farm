@@ -69,7 +69,11 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
     }
 
     function releaseToken(address account,uint256 amount) external inited {
-        require(amount>0,"amount should be bigger than 0");
+       
+ 	    if(amount==0) {
+		    return;
+		}
+		
         //msg.sender should be the farm contract,here is msg.sender
         IERC20(meltAddress).transferFrom(msg.sender,address(this),amount);
         //according day to cal idx
