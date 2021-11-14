@@ -90,9 +90,7 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
 
     function claimReward() public inited notHalted {
         uint256 idx = allUserIdx[msg.sender];
-        if(idx==0) {
-            return;
-        }
+        require(idx != 0,"no this account");
 
         require(!allUserInfo[idx].disable,"user is diabled already");
 
