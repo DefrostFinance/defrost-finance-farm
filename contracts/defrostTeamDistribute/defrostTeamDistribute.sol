@@ -51,10 +51,10 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
             require(ratio[i]<=100,"ratio should below 100");
 
             require(allUserIdx[users[i]]==0,"the user exist already");
-            userCount++;//idx begin from 1
+			userCount++;
             allUserIdx[users[i]] = userCount;
             allUserInfo[userCount] = userInfo(users[i],ratio[i],0,0,false);
-   
+           
             RATIO_DENOM += ratio[i];
         }
 
@@ -90,10 +90,9 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
 
     function claimReward() public inited notHalted {
         uint256 idx = allUserIdx[msg.sender];
-        require(idx != 0,"no this account");
-
-        require(!allUserInfo[idx].disable,"user is diabled already");
-
+        //idx begin from 1
+		require(idx != 0,"no this account");
+      
         uint256 amount = allUserInfo[idx].pendingAmount;
         require(amount>0,"pending amount need to be bigger than 0");
 
@@ -116,8 +115,11 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
 
         IERC20(rewardToken).transferFrom(msg.sender,address(this),_amount);
         if(RATIO_DENOM>0) {
-            for(uint256 i=0;i<userCount;i++){
+            for(uint256 i=1;i<userCount+1;i++){
                 userInfo storage info = allUserInfo[i];
+                if(info.disable) {
+                    continue;
+                }
                 uint256 useramount = _amount.mul(info.ratio).div(RATIO_DENOM);
                 info.pendingAmount = info.pendingAmount.add(useramount);
                 info.wholeAmount = info.wholeAmount.add(useramount);
