@@ -342,6 +342,20 @@ contract('MinePoolProxy', function (accounts){
 
     })
 
+
+    // function setDefrostAddress( address _rewardToken,
+    //     address _oracle,
+    //     address _h2o,
+    //     address _teamRewardSc,
+    //     address _releaseSc)
+
+    // it("[0021] check locked and pending balance,should pass", async()=>{
+    //     console.log("add team member");
+    //
+    //     let msgData =  farmproxyinst.contract.methods.setDefrostAddress([teamMember3],[20]).encodeABI();
+    //     let hash = await utils.createApplication(mulSiginst,accounts[9],teamReward.address,0,msgData);
+    // })
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //return (depositAmount,claimable,locked,claimed,joeReward);
     it("[0021] check locked and pending balance,should pass", async()=>{
