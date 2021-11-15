@@ -99,6 +99,7 @@ contract TokenFarm is Halt,TokenFarmData {
     }
 
     function stake(address account) public updateReward(account) onlyOwner {
+		 require(startTime>0,"farm is not inited");
          require(now>startTime);
     }
 
