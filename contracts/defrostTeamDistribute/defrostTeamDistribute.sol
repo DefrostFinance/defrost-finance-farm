@@ -48,7 +48,6 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         for(uint256 i=0;i<users.length;i++){
             require(users[i]!=address(0),"user address is 0");
             require(ratio[i]>0,"ratio should be bigger than 0");
-            require(ratio[i]<=100,"ratio should below 100");
 
             require(allUserIdx[users[i]]==0,"the user exist already");
 			userCount++;
@@ -65,8 +64,6 @@ contract TeamDistribute is defrostTeamDistributeStorage,proxyOwner {
         inited
         onlyOrigin
     {
-        require(ratio<100,"ratio need to below 100");
-
         uint256 idx = allUserIdx[user];
         RATIO_DENOM -= allUserInfo[idx].ratio;
         RATIO_DENOM += ratio;
