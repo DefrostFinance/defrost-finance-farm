@@ -70,9 +70,9 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
 
     function releaseToken(address account,uint256 amount) external inited {
        
- 	    if(amount==0) {
-		    return;
-		}
+ 	    // if(amount==0) {//remove to fixed release problem
+		//    return;
+		//}
 		
         //msg.sender should be the farm contract,here is msg.sender
         IERC20(meltAddress).transferFrom(msg.sender,address(this),amount);

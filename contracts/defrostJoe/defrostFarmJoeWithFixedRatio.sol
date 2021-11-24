@@ -738,11 +738,13 @@ contract defrostFarmJoeFixedRatio is defrostFarmJoeStorage,proxyOwner{
             ITeamRewardSC(teamRewardSc).inputTeamReward(teamReward);
         }
 
-        if(userRward>0) {
-            //safeRewardTransfer(_user,userRward);
-            IERC20(rewardToken).approve(releaseSc,userRward);
-            IReleaseSC(releaseSc).releaseToken(_user,userRward);
-        }
+        //if(userRward>0) {//remove to fixed release problem
+         //safeRewardTransfer(_user,userRward);
+		 
+         IERC20(rewardToken).approve(releaseSc,userRward);
+         IReleaseSC(releaseSc).releaseToken(_user,userRward);
+		 
+        //}
     }
 
     //function lockedBalanceOf(address account) external view returns(uint256);
