@@ -42,7 +42,7 @@ contract AirDropVault is AirDropVaultData {
         uint256 amount = userWhiteList[msg.sender];
         userWhiteList[msg.sender] = 0;
         //for statics
-        totalWhiteListClaimed = totalWhiteListClaimed.add(userWhiteList[msg.sender]);
+        totalWhiteListClaimed = totalWhiteListClaimed.add(amount);
         IERC20(meltToken).transfer(msg.sender,amount);
 
         emit WhiteListClaim(msg.sender,amount);
