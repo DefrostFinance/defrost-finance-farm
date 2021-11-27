@@ -35,17 +35,21 @@ contract TokenFarm is Halt,TokenFarmData {
     }
 
     function setMineRate(uint256 _reward,uint256 _duration) public onlyOwner updateReward(address(0)){
+        require(_duration>0);
         rewardRate = _reward.div(_duration);
         rewardPerduration = _reward;
         duration = _duration;
     }   
 
 
-    function setPeriodFinish(uint256 startime,uint256 endtime) public onlyOwner updateReward(address(0)) {
+    function setPeriodFinish(uint256 _startime,uint256 _endtime) public onlyOwner updateReward(address(0)) {
+        require(_startime>now);
+        require(_endtime>_startime);
+
         //set new finish time
-        lastUpdateTime = startime;
-        periodFinish = endtime;
-        startTime = startime;
+        lastUpdateTime = _startime;
+        periodFinish = _endtime;
+        startTime = _startime;
     }  
     
     /**

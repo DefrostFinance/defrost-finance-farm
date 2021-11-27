@@ -12,6 +12,7 @@ import "./TokenFarm.sol";
 contract savingsPoolData is Halt,interestEngine,ReentrancyGuard {
     uint256 constant internal currentVersion = 1;
     address  public melt;
+    address  public h2o;
     TokenFarm public tokenFarm;
 
     event InitContract(address indexed sender,address systemCoin,int256 interestRate,uint256 interestInterval,

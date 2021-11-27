@@ -19,42 +19,60 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     /**
      * @dev default function for foundation input miner coins.
      */
-    constructor (address multiSignature,
-                 address origin0,address origin1)
-       proxyOwner(multiSignature,origin0,origin1)
+    constructor (address _stakeInterestTk,
+                 address _farmRwardTk,
+                 address _multiSignature,
+                 address _origin0,
+                 address _origin1)
+       proxyOwner(_multiSignature,_origin0,_origin1)
        public
     {
-
+        melt = _stakeInterestTk;
+        h2o = _farmRwardTk;
+        tokenFarm = new TokenFarm(address(this),h2o);
     }
 
-    function initContract(  address _melt,
-                            address _h2o,
-                            int256 _interestRate,
+
+
+    function setSavingPool( int256 _interestRate,
                             uint256 _interestInterval,
                             uint256 _assetCeiling,
                             uint256 _assetFloor)
-      external originOnce
+        public
+        OwnerOrOrigin
     {
-        melt = _melt;
-        tokenFarm = new TokenFarm(address(this),_h2o);
-
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
         _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
 
-        emit InitContract(msg.sender,_melt,_interestRate,_interestInterval,_assetCeiling,_assetFloor);
+        emit InitContract(msg.sender,address(this),_interestRate,_interestInterval,_assetCeiling,_assetFloor);
     }
+
+    function setFarmPoolTime(uint256 _startime,uint256 _endtime)
+        external
+        OwnerOrOrigin
+    {
+        tokenFarm.setPeriodFinish(_startime,_endtime);
+    }
+
+    function setMineRate(uint256 _reward,uint256 _duration)
+        public
+        OwnerOrOrigin
+    {
+        tokenFarm.setMineRate(_reward,_duration);
+    }
+
 
     function () external payable{
         require(false);
     }
 
-    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor)external onlyOrigin{
+    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor)external OwnerOrOrigin{
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
     }
 
-    function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external onlyOrigin{
+    function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external OwnerOrOrigin{
         _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
     }
 
@@ -94,7 +112,7 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     //     * @return The number of staking tokens deposited for addr.
     //     */
     function totalStakedFor(address _account) public view returns (uint256) {
-         return assetInfoMap[_account].assetAndInterest;
+         return assetInfoMap[_account].originAsset;
     }
 
     function allPendingReward(address _account) public view returns(uint256,uint256){
@@ -122,5 +140,13 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         return assetInfoMap[_account].assetAndInterest;
     }
 
+    function getMineInfo() public view returns (int256,uint256,uint256,uint256) {
+        uint256 rewardPerduration;
+        uint256 duration;
+
+        (rewardPerduration,duration) = tokenFarm.getMineInfo();
+
+        return (interestRate,interestInterval,rewardPerduration,duration);
+    }
 
 }
