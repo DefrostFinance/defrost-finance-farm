@@ -183,10 +183,10 @@ contract swapOracle  {
     }
 
     function getPrice(address queryToken) public view returns (uint256) {
-        return getaTokenPrice(metlavaxpair,queryToken);
+        return getTokenPrice(metlavaxpair,queryToken);
     }
 
-    function getaTokenPrice(address pair,address queryToken) public view returns (uint256) {
+    function getTokenPrice(address pair,address queryToken) public view returns (uint256) {
         IUniswapV2Pair upair = IUniswapV2Pair(pair);
         (uint112 reserve0, uint112 reserve1,) = upair.getReserves();
         uint256 price0 = IOracle(oracleAddr).getPrice(upair.token0());
