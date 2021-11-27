@@ -23,6 +23,7 @@ contract Operator is Ownable {
     function setOperator(uint256 index,address addAddress)public onlyOwner{
         _operators[index] = addAddress;
     }
+
     function getOperator(uint256 index)public view returns (address) {
         return _operators[index];
     }
