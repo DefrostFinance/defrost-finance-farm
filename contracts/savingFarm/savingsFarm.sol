@@ -68,6 +68,10 @@ contract savingsFarm is savingsPoolData,proxyOwner{
 
         require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"systemCoin : transferFrom failed!");
         addAsset(msg.sender, _amount);
+//
+//        _interestSettlement();
+//        settleUserInterest(msg.sender);
+
         //update token mine
         tokenFarm.stake(msg.sender);
 
@@ -78,18 +82,24 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     }
 
     function withdraw( uint256 amount) notHalted nonReentrant settleAccount(msg.sender) external{
-        if(amount == uint256(-1)){
-            amount = assetInfoMap[msg.sender].assetAndInterest;
+        if(amount==0) {
+            //claim h2o reward while deposit
+            tokenFarm.getReward(msg.sender);
+
+        } else {
+            if(amount == uint256(-1)){
+                amount = assetInfoMap[msg.sender].assetAndInterest;
+            }
+
+            //updated token mine
+            tokenFarm.unstake(msg.sender);
+
+            //claim h2o reward while deposit
+            tokenFarm.getReward(msg.sender);
+
+            subAsset(msg.sender,amount);
+            require(IERC20(melt).transfer(msg.sender, amount),"melt : transfer failed!");
         }
-
-        //updated token mine
-        tokenFarm.unstake(msg.sender);
-
-        //claim h2o reward while deposit
-        tokenFarm.getReward(msg.sender);
-
-        subAsset(msg.sender,amount);
-        require(IERC20(melt).transfer(msg.sender, amount),"systemCoin : transfer failed!");
 
         emit Withdraw(msg.sender,address(melt),amount);
     }
@@ -104,9 +114,10 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     }
 
     function allPendingReward(address _account) public view returns(uint256,uint256){
-        uint256 interest = 0;
-        if(assetInfoMap[_account].assetAndInterest>assetInfoMap[_account].originAsset) {
-            interest = assetInfoMap[_account].assetAndInterest.sub(assetInfoMap[_account].originAsset);
+        uint256 interest = getAssetBalance(_account);
+
+        if(interest>assetInfoMap[_account].originAsset) {
+            interest = interest.sub(assetInfoMap[_account].originAsset);
         }
 
         return (interest,tokenFarm.earned(_account));

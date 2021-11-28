@@ -64,7 +64,7 @@ contract interestEngine {
         emit SetInterestInfo(msg.sender,_interestRate,_interestInterval);
     }
 
-    function getAssetBalance(address account)public view returns(uint256){
+    function getAssetBalance(address account) public view returns(uint256){
         if(assetInfoMap[account].interestRateOrigin == 0 || interestInterval == 0){
             return 0;
         }

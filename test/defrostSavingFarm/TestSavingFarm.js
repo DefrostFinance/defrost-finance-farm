@@ -135,59 +135,57 @@ contract('Saving Pool Farm', function (accounts){
   })
 
   it("[0010] stake in,should pass", async()=>{
+    time.increase(7200);//2000 sec
 
     let  mineInfo = await farminst.getMineInfo( );
-    console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),mineInfo[3].toString(10));
+    console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),mineInfo[2].toString(10),mineInfo[3].toString(10));
     ////////////////////////staker1///////////////////////////////////////////////////////////
     res = await melt.approve(farminst.address,VAL_1M,{from:staker1});
     assert.equal(res.receipt.status,true);
-    time.increaseTo(startTime+1);
+    time.increase(1000);
 
     res = await farminst.deposit(VAL_1M,{from:staker1});
     assert.equal(res.receipt.status,true);
 
 
-    time.increaseTo(startTime+1000);
+    time.increase(1000);
     await melt.approve(farminst.address,VAL_1M,{from:staker2});
     res = await farminst.deposit(VAL_1M,{from:staker2});
     assert.equal(res.receipt.status,true);
 
 
-
   })
 
-/*
-  it("[0020] check staker1 mined balance,should pass", async()=>{
 
-     time.increase(2000);//2000 sec
+  it("[0020] check staker1 mined balance,should pass", async()=>{
+     time.increase(7200);//2000 sec
      let res = await farminst.totalStaked();
      console.log("totalstaked=" + res);
+
+    let  mineInfo = await farminst.getMineInfo( );
+    console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),mineInfo[2].toString(10),mineInfo[3].toString(10));
 
     let block = await web3.eth.getBlock("latest");
      console.log("blocknum1=" + block.number)
 
-    res = await farminst.allPendingReward(0,staker1)
-    console.log("staker1 h2o pending reward",res.toString());
+    res = await farminst.allPendingReward(staker1)
+    console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
 
-     res = await farminst.allPendingReward(1,staker1)
-     console.log("staker1 melt pending reward",res.toString());
-
-
-     let h2opreBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
-     let meltpreBalance = web3.utils.fromWei(await melt.balanceOf(staker1));
+    let meltpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
 
      res = await farminst.withdraw(0,{from:staker1});
      assert.equal(res.receipt.status,true);
 
-     let meltafterBalance = web3.utils.fromWei(await melt.balanceOf(staker1))
+     let meltafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker1))
      console.log("staker1 h2o reward=" + (meltafterBalance - meltpreBalance));
 
-      let h2oafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker1))
-      console.log("staker1 melt reward=" + (h2oafterBalance - h2opreBalance));
+      res = await farminst.allPendingReward(staker1)
+      console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
   })
 
+/*
 
     it("[0030] stake out,should pass", async()=>{
         console.log("\n\n");
