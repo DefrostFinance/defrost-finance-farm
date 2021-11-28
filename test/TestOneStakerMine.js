@@ -26,7 +26,7 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
  test case only for the ganahce command
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
-contract('MinePoolProxy', function (accounts){
+contract('MinePoo', function (accounts){
   let rewardOneDay = web3.utils.toWei('5000', 'ether');
   let blockSpeed = 5;
   let bocksPerDay = 3600*24/blockSpeed;

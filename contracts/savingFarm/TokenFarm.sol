@@ -35,7 +35,7 @@ contract TokenFarm is Halt,TokenFarmData {
     }
 
     function setMineRate(uint256 _reward,uint256 _duration) public onlyOwner updateReward(address(0)){
-        require(_duration>0);
+        require(_duration>0,"duration need to be over 0");
         rewardRate = _reward.div(_duration);
         rewardPerduration = _reward;
         duration = _duration;

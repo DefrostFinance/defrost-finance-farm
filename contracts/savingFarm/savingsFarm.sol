@@ -30,38 +30,9 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         melt = _stakeInterestTk;
         h2o = _farmRwardTk;
         tokenFarm = new TokenFarm(address(this),h2o);
+        assetCeiling = uint256(-1);
+        IERC20(h2o).approve(address(tokenFarm),uint256(-1));
     }
-
-
-
-    function setSavingPool( int256 _interestRate,
-                            uint256 _interestInterval,
-                            uint256 _assetCeiling,
-                            uint256 _assetFloor)
-        public
-        OwnerOrOrigin
-    {
-        assetCeiling = _assetCeiling;
-        assetFloor = _assetFloor;
-        _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
-
-        emit InitContract(msg.sender,address(this),_interestRate,_interestInterval,_assetCeiling,_assetFloor);
-    }
-
-    function setFarmPoolTime(uint256 _startime,uint256 _endtime)
-        external
-        OwnerOrOrigin
-    {
-        tokenFarm.setPeriodFinish(_startime,_endtime);
-    }
-
-    function setMineRate(uint256 _reward,uint256 _duration)
-        public
-        OwnerOrOrigin
-    {
-        tokenFarm.setMineRate(_reward,_duration);
-    }
-
 
     function () external payable{
         require(false);
@@ -73,11 +44,28 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     }
 
     function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external OwnerOrOrigin{
+        //12e26 year rate,20% (+1)
         _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
     }
 
 
+    function setFarmTime(uint256 _startime,uint256 _endtime)
+    external
+    OwnerOrOrigin
+    {
+        tokenFarm.setPeriodFinish(_startime,_endtime);
+    }
+
+    function setMineRate(uint256 _reward,uint256 _duration)
+    public
+    OwnerOrOrigin
+    {
+        tokenFarm.setMineRate(_reward,_duration);
+    }
+
     function deposit(uint256 _amount) notHalted nonReentrant settleAccount(msg.sender) external{
+        require(interestRate>0,"interest rate is not set");
+
         require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"systemCoin : transferFrom failed!");
         addAsset(msg.sender, _amount);
         //update token mine
@@ -136,9 +124,6 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         IERC20(melt).transferFrom(address(this), _reciever,bal);
     }
 
-    function balanceOf(address _account) external view returns (uint256) {
-        return assetInfoMap[_account].assetAndInterest;
-    }
 
     function getMineInfo() public view returns (int256,uint256,uint256,uint256) {
         uint256 rewardPerduration;
@@ -147,6 +132,14 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         (rewardPerduration,duration) = tokenFarm.getMineInfo();
 
         return (interestRate,interestInterval,rewardPerduration,duration);
+    }
+
+    function balanceOf(address _account) external view returns (uint256) {
+        return assetInfoMap[_account].assetAndInterest;
+    }
+
+    function totalSupply() external view returns (uint256){
+        return totalAssetAmount;
     }
 
 }
