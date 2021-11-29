@@ -30,8 +30,8 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         melt = _stakeInterestToken;
         h2o = _farmRwardToken;
         tokenFarm = new TokenFarm(address(this),h2o);
-        assetCeiling = uint256(~0);
-        IERC20(h2o).approve(address(tokenFarm),uint256(~0));
+        assetCeiling = uint256(-1);
+        IERC20(h2o).approve(address(tokenFarm),uint256(-1));
     }
 
     function () external payable{
@@ -81,14 +81,16 @@ contract savingsFarm is savingsPoolData,proxyOwner{
             tokenFarm.getReward(msg.sender);
 
         } else {
-            if(amount == uint256(-1)){
+
+            if(amount>=assetInfoMap[msg.sender].assetAndInterest){
                 amount = assetInfoMap[msg.sender].assetAndInterest;
+                tokenFarm.getReward(msg.sender);
+            } else {
+                //updated token mine
+                tokenFarm.unstake(msg.sender);
             }
 
             subAsset(msg.sender,amount);
-
-            //updated token mine
-            tokenFarm.unstake(msg.sender);
 
             require(IERC20(melt).transfer(msg.sender, amount),"melt : transfer failed!");
         }

@@ -97,6 +97,7 @@ contract TokenFarm is Halt,TokenFarmData {
             IERC20(rewardToken).transferFrom(manager,account, reward);
 
             uint256 afterBalance = IERC20(rewardToken).balanceOf(address(manager));
+
             require(preBalance - afterBalance==reward,"reward transfer error!");
             emit RewardPaid(rewardToken,account, reward);
         }
