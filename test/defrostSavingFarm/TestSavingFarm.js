@@ -244,13 +244,13 @@ contract('Saving Pool Farm', function (accounts){
     })
 
 
-    /*
-        it("[0050] get back left mining token,should pass", async()=>{
+
+    it("[0050] get back left mining token,should pass", async()=>{
 
             let msgData = farminst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
             let hash = await utils.createApplication(mulSiginst,operator0,farminst.address,0,msgData);
 
-            let res = await utils.testSigViolation("multiSig setUserPhxUnlockInfo: This tx is not aprroved",async function(){
+            let res = await utils.testSigViolation("multiSig getbackLeftMiningToken: This tx is not aprroved",async function(){
                 await farminst.getbackLeftMiningToken(staker1,{from:operator0});
             });
             assert.equal(res,false,"should return false")
@@ -290,7 +290,7 @@ contract('Saving Pool Farm', function (accounts){
             console.log("melt getback balance = " + diff);
 
         })
-    */
+
 
 
 })

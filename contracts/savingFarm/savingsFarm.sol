@@ -120,11 +120,15 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     }
 
     function getbackLeftMiningToken(address _reciever)  public
-        onlyOrigin
+    OwnerOrOrigin
     {
+        //get back h2o
         tokenFarm.getbackLeftMiningToken(_reciever);
-        uint256 bal =  IERC20(melt).balanceOf(address(this));
-        IERC20(melt).transferFrom(address(this), _reciever,bal);
+
+        //get back melt for future interest
+        uint256 bal =  IERC20(melt).balanceOf(address(this)).sub(totalAssetAmount);
+        IERC20(melt).transfer(_reciever,bal);
+
     }
 
 
