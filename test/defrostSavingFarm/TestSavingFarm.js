@@ -25,8 +25,9 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
 //     _interestRate = (1.05)^(1/24)-1,decimals=27，_interestInterval = 3600
 //
 // 1.0020349912970346474243981869599-1 = 0.0020349912970346474243981869599，再*1e27就行了
-let YEAR_INTEREST = new BN("0.1");
-let DAY_INTEREST = YEAR_INTEREST.div(new BN(365));//日利息 1%
+let YEAR_INTEREST = new BN("0.6");
+let DAY_INTEREST = YEAR_INTEREST.div(new BN(365));//日利息 5%0
+//let DAY_INTEREST = new BN(0.005);
 let INTEREST_RATE = new BN("1").plus(new BN(DAY_INTEREST));
 let DIV24= new BN("1").div(24);//div one day 24 hours
 INTEREST_RATE = Math.pow(INTEREST_RATE,DIV24) - 1;

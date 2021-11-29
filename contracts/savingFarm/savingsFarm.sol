@@ -45,7 +45,7 @@ contract savingsFarm is savingsPoolData,proxyOwner{
 
     function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external OwnerOrOrigin{
         //12e26 year rate,20% (+1)
-        _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
+        _setInterestInfo(_interestRate,_interestInterval,20e26,rayDecimals);
     }
 
 
