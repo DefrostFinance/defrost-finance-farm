@@ -19,19 +19,19 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     /**
      * @dev default function for foundation input miner coins.
      */
-    constructor (address _stakeInterestTk,
-                 address _farmRwardTk,
+    constructor (address _stakeInterestToken,
+                 address _farmRwardToken,
                  address _multiSignature,
                  address _origin0,
                  address _origin1)
        proxyOwner(_multiSignature,_origin0,_origin1)
        public
     {
-        melt = _stakeInterestTk;
-        h2o = _farmRwardTk;
+        melt = _stakeInterestToken;
+        h2o = _farmRwardToken;
         tokenFarm = new TokenFarm(address(this),h2o);
-        assetCeiling = uint256(-1);
-        IERC20(h2o).approve(address(tokenFarm),uint256(-1));
+        assetCeiling = uint256(~0);
+        IERC20(h2o).approve(address(tokenFarm),uint256(~0));
     }
 
     function () external payable{
@@ -68,15 +68,9 @@ contract savingsFarm is savingsPoolData,proxyOwner{
 
         require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"systemCoin : transferFrom failed!");
         addAsset(msg.sender, _amount);
-//
-//        _interestSettlement();
-//        settleUserInterest(msg.sender);
 
         //update token mine
         tokenFarm.stake(msg.sender);
-
-        //claim h2o reward while deposit
-        tokenFarm.getReward(msg.sender);
 
         emit Save(msg.sender,address(melt), _amount);
     }
@@ -91,13 +85,11 @@ contract savingsFarm is savingsPoolData,proxyOwner{
                 amount = assetInfoMap[msg.sender].assetAndInterest;
             }
 
+            subAsset(msg.sender,amount);
+
             //updated token mine
             tokenFarm.unstake(msg.sender);
 
-            //claim h2o reward while deposit
-            tokenFarm.getReward(msg.sender);
-
-            subAsset(msg.sender,amount);
             require(IERC20(melt).transfer(msg.sender, amount),"melt : transfer failed!");
         }
 

@@ -103,7 +103,6 @@ contract interestEngine {
             assetInfoMap[account].assetAndInterest = assetAndInterest.sub(amount);
             require(assetInfoMap[account].assetAndInterest >= assetFloor, "Debt is below the limit");
             assetInfoMap[account].originAsset = originBalance.sub(_subAsset);
-
         }else{
             require(false,"overflow asset balance");
         }
