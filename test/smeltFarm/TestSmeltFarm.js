@@ -200,14 +200,11 @@ contract('Saving Pool Farm', function (accounts){
 
   })
 
-/*
+
   it("[0020] check staker1 mined balance,should pass", async()=>{
      time.increase(7200);//2000 sec
      let res = await farminst.totalStaked();
      console.log("totalstaked=" + res);
-
-    let  mineInfo = await farminst.getMineInfo( );
-    console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),mineInfo[2].toString(10),mineInfo[3].toString(10));
 
     let block = await web3.eth.getBlock("latest");
      console.log("blocknum1=" + block.number)
@@ -225,7 +222,7 @@ contract('Saving Pool Farm', function (accounts){
      console.log("staker1 h2o reward=" + (meltafterBalance - meltpreBalance));
 
      res = await farminst.allPendingReward(staker1)
-     console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
+     console.log("staker1 melt number",web3.utils.fromWei(res[0].toString()),"melt mine pending",res[1].toString());
 
   })
 
@@ -255,8 +252,8 @@ contract('Saving Pool Farm', function (accounts){
 
         console.log("staked balance "+diff,"lp balance change ="+lpdiff);
 
-        assert.equal(lpdiff,web3.utils.fromWei(VAL_1M));
     })
+
 
 
     it("[0040] check staker1 mined balance and withdraw reward again,should pass", async()=>{
@@ -289,135 +286,136 @@ contract('Saving Pool Farm', function (accounts){
 
 
 
-    it("[0050] get back left mining token,should pass", async()=>{
+        it("[0050] get back left mining token,should pass", async()=>{
 
-            let msgData = farminst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
-            let hash = await utils.createApplication(mulSiginst,operator0,farminst.address,0,msgData);
+                let msgData = farminst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
+                let hash = await utils.createApplication(mulSiginst,operator0,farminst.address,0,msgData);
 
-            let res = await utils.testSigViolation("multiSig getbackLeftMiningToken: This tx is not aprroved",async function(){
-                await farminst.getbackLeftMiningToken(staker1,{from:operator0});
-            });
-            assert.equal(res,false,"should return false")
+                let res = await utils.testSigViolation("multiSig getbackLeftMiningToken: This tx is not aprroved",async function(){
+                    await farminst.getbackLeftMiningToken(staker1,{from:operator0});
+                });
+                assert.equal(res,false,"should return false")
 
-            let index = await mulSiginst.getApplicationCount(hash);
-            index = index.toNumber()-1;
-            console.log(index);
+                let index = await mulSiginst.getApplicationCount(hash);
+                index = index.toNumber()-1;
+                console.log(index);
 
-            await mulSiginst.signApplication(hash,index,{from:accounts[7]})
-            await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+                await mulSiginst.signApplication(hash,index,{from:accounts[7]})
+                await mulSiginst.signApplication(hash,index,{from:accounts[8]})
 
 
-            console.log("\n\n");
-            let h2opreMineBlance = await h2o.balanceOf(staker1);
-            console.log("h2o preMineBlance=" + h2opreMineBlance);
+                console.log("\n\n");
+                let h2opreMineBlance = await h2o.balanceOf(staker1);
+                console.log("h2o preMineBlance=" + h2opreMineBlance);
 
-            let meltpreRecieverBalance = await melt.balanceOf(staker1);
-            console.log("melt prebalance = " + meltpreRecieverBalance);
+                let meltpreRecieverBalance = await melt.balanceOf(staker1);
+                console.log("melt prebalance = " + meltpreRecieverBalance);
 
-            // res = await proxy.getbackLeftMiningToken(staker1,{from:accounts[9]});
-            // assert.equal(res.receipt.status,true);
-            res = await utils.testSigViolation("multiSig getback reward token: This tx is aprroved",async function(){
-                await farminst.getbackLeftMiningToken(staker1,{from:operator0});
-            });
-            assert.equal(res,true,"should return false")
+                // res = await proxy.getbackLeftMiningToken(staker1,{from:accounts[9]});
+                // assert.equal(res.receipt.status,true);
+                res = await utils.testSigViolation("multiSig getback reward token: This tx is aprroved",async function(){
+                    await farminst.getbackLeftMiningToken(staker1,{from:operator0});
+                });
+                assert.equal(res,true,"should return false")
 
-            let h2oafterRecieverBalance = await  h2o.balanceOf(staker1);
-            console.log("after h2o mine balance = " + h2oafterRecieverBalance);
+                let h2oafterRecieverBalance = await  h2o.balanceOf(staker1);
+                console.log("after h2o mine balance = " + h2oafterRecieverBalance);
 
-            let meltafterRecieverBalance = await  melt.balanceOf(staker1);
-            console.log("after melt mine balance = " + meltafterRecieverBalance);
+                let meltafterRecieverBalance = await  melt.balanceOf(staker1);
+                console.log("after melt mine balance = " + meltafterRecieverBalance);
 
-            let diff = web3.utils.fromWei(h2oafterRecieverBalance) - web3.utils.fromWei(h2opreMineBlance);
-            console.log("h2o getback balance = " + diff);
+                let diff = web3.utils.fromWei(h2oafterRecieverBalance) - web3.utils.fromWei(h2opreMineBlance);
+                console.log("h2o getback balance = " + diff);
 
-            diff = web3.utils.fromWei(meltafterRecieverBalance) - web3.utils.fromWei(meltpreRecieverBalance);
-            console.log("melt getback balance = " + diff);
+                diff = web3.utils.fromWei(meltafterRecieverBalance) - web3.utils.fromWei(meltpreRecieverBalance);
+                console.log("melt getback balance = " + diff);
+
+            })
+
+
+        it("[0060] check staker2 mined balance,should pass", async()=>{
+            ////////////////////////////////////////////////////////////////////////////////////////////
+            res = await melt.transfer(farminst.address,VAL_10M,{from:accounts[0]});
+            assert.equal(res.receipt.status,true);
+
+            res = await h2o.mint(farminst.address,VAL_10M);
+            assert.equal(res.receipt.status,true);
+
+            res = await melt.transfer(staker1,VAL_10M,{from:accounts[0]});
+            assert.equal(res.receipt.status,true);
+
+            res = await melt.transfer(staker2,VAL_10M,{from:accounts[0]});
+            assert.equal(res.receipt.status,true);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+            time.increase(7200);//2000 sec
+
+            res = await farminst.allPendingReward(staker2)
+            console.log("staker2 intterest",res[0].toString(),"melt mine pending",res[1].toString());
+
+
+            let meltpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
+
+            res = await farminst.withdraw(0,{from:staker2});
+            assert.equal(res.receipt.status,true);
+
+            let meltafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2))
+            console.log("staker2 h2o reward=" + (meltafterBalance - meltpreBalance));
+
+            res = await farminst.allPendingReward(staker2);
+            console.log("staker2 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
         })
 
-    it("[0060] check staker2 mined balance,should pass", async()=>{
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        res = await melt.transfer(farminst.address,VAL_10M,{from:accounts[0]});
-        assert.equal(res.receipt.status,true);
 
-        res = await h2o.mint(farminst.address,VAL_10M);
-        assert.equal(res.receipt.status,true);
+        it("[0070] staker2 stake out all,should pass", async()=>{
+            time.increase(200);//2000 sec
+            console.log("\n\n");
+            let preLpBlance = await melt.balanceOf(staker2);
+            console.log("preLpBlance=" + preLpBlance);
 
-        res = await melt.transfer(staker1,VAL_10M,{from:accounts[0]});
-        assert.equal(res.receipt.status,true);
+            let preStakeBalance = await farminst.totalStakedFor(staker2);
+            console.log("pre sc staked for= " + preStakeBalance);
 
-        res = await melt.transfer(staker2,VAL_10M,{from:accounts[0]});
-        assert.equal(res.receipt.status,true);
-///////////////////////////////////////////////////////////////////////////////////////////////////
-        time.increase(7200);//2000 sec
+            let res = await farminst.withdraw(new BN("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16),{from:staker2});
+            console.log(res);
 
-        res = await farminst.allPendingReward(staker2)
-        console.log("staker2 intterest",res[0].toString(),"melt mine pending",res[1].toString());
+            assert.equal(res.receipt.status,true);
 
+            let afterStakeBalance = await farminst.totalStakedFor(staker2);
 
-        let meltpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
+            console.log("after sc staked for = " + afterStakeBalance);
 
-        res = await farminst.withdraw(0,{from:staker2});
-        assert.equal(res.receipt.status,true);
+            let diff = web3.utils.fromWei(preStakeBalance) - web3.utils.fromWei(afterStakeBalance);
+            console.log("stake balance diff = " + diff);
 
-        let meltafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2))
-        console.log("staker2 h2o reward=" + (meltafterBalance - meltpreBalance));
+            let afterLpBlance = await melt.balanceOf(staker2);
+            console.log("afterLpBlance=" + afterLpBlance);
+            let lpdiff = web3.utils.fromWei(afterLpBlance) - web3.utils.fromWei(preLpBlance);
 
-        res = await farminst.allPendingReward(staker2);
-        console.log("staker2 intterest",res[0].toString(),"melt mine pending",res[1].toString());
+            console.log("staked balance "+diff,"lp balance change ="+lpdiff);
 
-    })
+            assert.equal(lpdiff>=web3.utils.fromWei(VAL_1M),true);
+        })
 
 
-    it("[0070] staker2 stake out all,should pass", async()=>{
-        time.increase(200);//2000 sec
-        console.log("\n\n");
-        let preLpBlance = await melt.balanceOf(staker2);
-        console.log("preLpBlance=" + preLpBlance);
-
-        let preStakeBalance = await farminst.totalStakedFor(staker2);
-        console.log("pre sc staked for= " + preStakeBalance);
-
-        let res = await farminst.withdraw(new BN("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16),{from:staker2});
-        console.log(res);
-
-        assert.equal(res.receipt.status,true);
-
-        let afterStakeBalance = await farminst.totalStakedFor(staker2);
-
-        console.log("after sc staked for = " + afterStakeBalance);
-
-        let diff = web3.utils.fromWei(preStakeBalance) - web3.utils.fromWei(afterStakeBalance);
-        console.log("stake balance diff = " + diff);
-
-        let afterLpBlance = await melt.balanceOf(staker2);
-        console.log("afterLpBlance=" + afterLpBlance);
-        let lpdiff = web3.utils.fromWei(afterLpBlance) - web3.utils.fromWei(preLpBlance);
-
-        console.log("staked balance "+diff,"lp balance change ="+lpdiff);
-
-        assert.equal(lpdiff>=web3.utils.fromWei(VAL_1M),true);
-    })
+        it("[0080] check staker2 mined balance,should pass", async()=>{
+            time.increase(7200);//2000 sec
+            res = await farminst.allPendingReward(staker2);
+            console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
 
-    it("[0080] check staker2 mined balance,should pass", async()=>{
-        time.increase(7200);//2000 sec
-        res = await farminst.allPendingReward(staker2);
-        console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
+            let meltpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
 
+            res = await farminst.withdraw(0,{from:staker2});
+            assert.equal(res.receipt.status,true);
 
-        let meltpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
+            let meltafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2))
+            console.log("staker1 h2o reward=" + (meltafterBalance - meltpreBalance));
 
-        res = await farminst.withdraw(0,{from:staker2});
-        assert.equal(res.receipt.status,true);
+            res = await farminst.allPendingReward(staker2);
+            console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
-        let meltafterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2))
-        console.log("staker1 h2o reward=" + (meltafterBalance - meltpreBalance));
+        })
 
-        res = await farminst.allPendingReward(staker2);
-        console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
-
-    })
-*/
 
 })

@@ -140,6 +140,10 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
 
             _interestSettlement();
 
+            uint256 smeltbal = IERC20(smelt).balanceOf(msg.sender);
+            if(_smeltAmount>smeltbal) {
+                _smeltAmount = smeltbal;
+            }
             uint256 meltAmount = _smeltAmount.mul(accumulatedRate)/rayDecimals;
 
             smelt.burn(msg.sender,_smeltAmount);
