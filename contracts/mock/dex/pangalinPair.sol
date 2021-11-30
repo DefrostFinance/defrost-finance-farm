@@ -1,3 +1,5 @@
+pragma solidity ^0.5.16;
+
 // Sources flattened with hardhat v2.0.6 https://hardhat.org
 
 // File contracts/pangolin-core/interfaces/IPangolinPair.sol

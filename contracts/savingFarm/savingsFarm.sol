@@ -38,27 +38,27 @@ contract savingsFarm is savingsPoolData,proxyOwner{
         require(false);
     }
 
-    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor)external OwnerOrOrigin{
+    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor) external onlyOrigin{
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
     }
 
-    function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external OwnerOrOrigin{
+    function setInterestInfo(int256 _interestRate,uint256 _interestInterval) external onlyOrigin{
         //12e26 year rate,20% (+1)
         _setInterestInfo(_interestRate,_interestInterval,20e26,rayDecimals);
     }
 
 
     function setFarmTime(uint256 _startime,uint256 _endtime)
-    external
-    OwnerOrOrigin
+        external
+        onlyOrigin
     {
         tokenFarm.setPeriodFinish(_startime,_endtime);
     }
 
     function setMineRate(uint256 _reward,uint256 _duration)
-    public
-    OwnerOrOrigin
+        external
+        onlyOrigin
     {
         tokenFarm.setMineRate(_reward,_duration);
     }
@@ -66,7 +66,7 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     function deposit(uint256 _amount) notHalted nonReentrant settleAccount(msg.sender) external{
         require(interestRate>0,"interest rate is not set");
 
-        require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"systemCoin : transferFrom failed!");
+        require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"token transferFrom failed!");
         addAsset(msg.sender, _amount);
 
         //update token mine
@@ -122,7 +122,7 @@ contract savingsFarm is savingsPoolData,proxyOwner{
     }
 
     function getbackLeftMiningToken(address _reciever)  public
-    OwnerOrOrigin
+        onlyOrigin
     {
         //get back h2o
         tokenFarm.getbackLeftMiningToken(_reciever);

@@ -3,7 +3,7 @@ pragma solidity ^0.5.16;
 import "./Ownable.sol";
 import "./multiSignatureClient.sol";
 
-contract Admin is multiSignatureClient,Ownable {
+contract Admin is Ownable {
     mapping(address => bool) public mapAdmin;
     event AddAdmin(address admin);
     event RemoveAdmin(address admin);
@@ -15,7 +15,7 @@ contract Admin is multiSignatureClient,Ownable {
 
     function addAdmin(address admin)
         external
-        validCall
+        onlyOwner
     {
         mapAdmin[admin] = true;
         emit AddAdmin(admin);
@@ -23,7 +23,7 @@ contract Admin is multiSignatureClient,Ownable {
 
     function removeAdmin(address admin)
         external
-        validCall
+        onlyOwner
     {
         delete mapAdmin[admin];
         emit RemoveAdmin(admin);

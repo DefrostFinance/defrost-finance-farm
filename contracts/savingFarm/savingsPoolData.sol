@@ -15,7 +15,7 @@ contract savingsPoolData is Halt,interestEngine,ReentrancyGuard {
     address  public h2o;
     TokenFarm public tokenFarm;
 
-    event InitContract(address indexed sender,address systemCoin,int256 interestRate,uint256 interestInterval,
+    event InitContract(address indexed sender,address stakeToken,int256 interestRate,uint256 interestInterval,
         uint256 assetCeiling,uint256 assetFloor);
     event Save(address indexed sender, address indexed account, uint256 amount);
     event Withdraw(address indexed sender, address indexed account, uint256 amount);
