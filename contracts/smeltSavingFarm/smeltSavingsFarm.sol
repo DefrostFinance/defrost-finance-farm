@@ -15,7 +15,7 @@ import "./smeltToken/smeltToken.sol";
  * @dev Deposit systemCoin earn interest systemcoin.
  *
  */
-contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
+contract smeltSavingsFarm is savingsPoolData,proxyOwner{
     using SafeMath for uint256;
     /**
      * @dev default function for foundation input miner coins.
@@ -35,6 +35,7 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         smelt = new smeltToken("Defrost Finance Smelt Token","SMELT",18,address(tokenFarm));
 
         tokenFarm.addAdmin(address(smelt));
+        tokenFarm.addAdmin(address(this));
         smelt.setFarmFlag(true);
 
         IERC20(h2o).approve(address(tokenFarm),uint256(-1));
@@ -62,7 +63,7 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         smelt.setFarmFlag(flag);
     }
 
-    function _setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate)
+    function setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate)
         external
         onlyOrigin
     {
@@ -75,7 +76,7 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         require(_interestInterval>0,"input mine Interval must larger than zero");
 
         uint256 newLimit = rpower(uint256(1e27+_interestRate),31536000/_interestInterval,rayDecimals);
-        require(newLimit<=maxRate && newLimit>=minRate,"input stability fee is out of range");
+        require(newLimit<=maxRate && newLimit>=minRate,"interest rate is out of range");
 
         _interestSettlement();
 

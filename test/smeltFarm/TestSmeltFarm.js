@@ -1,6 +1,6 @@
 const { time, expectEvent} = require("@openzeppelin/test-helpers");
 
-const SavingMinePool = artifacts.require('savingsFarm');
+const SavingMinePool = artifacts.require('smeltSavingsFarm');
 
 const H2oToken = artifacts.require('LpToken');
 
@@ -20,23 +20,34 @@ web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
  test case only for the ganahce command
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
-// 现在一般都是1个小时结息一次，
-// 计算器算一下,
-//     _interestRate = (1.05)^(1/24)-1,decimals=27，_interestInterval = 3600
-//
+// 1个小时结息一次，
+// _interestRate = (1.05)^(1/24)-1,decimals=27，_interestInterval = 3600
 // 1.0020349912970346474243981869599-1 = 0.0020349912970346474243981869599，再*1e27就行了
-let YEAR_INTEREST = new BN("0.6");
-let DAY_INTEREST = YEAR_INTEREST.div(new BN(365));//日利息 5%0
-//let DAY_INTEREST = new BN(0.005);
-let INTEREST_RATE = new BN("1").plus(new BN(DAY_INTEREST));
-let DIV24= new BN("1").div(24);//div one day 24 hours
-INTEREST_RATE = Math.pow(INTEREST_RATE,DIV24) - 1;
 
-console.log("INTEREST_RATE",INTEREST_RATE);
+// let DAY_MAX_RATE = MAX_YEAR_RATE.div(new BN(365));//日利息 5%0
+// let DAY_MAX_INTEREST_RATE = new BN("1").plus(new BN(DAY_MAX_RATE));
+// let DIV24= new BN("1").div(24);//div one day 24 hours
+// DAY_MAX_INTEREST_RATE = Math.pow(DAY_MAX_INTEREST_RATE,DIV24) - 1;
+let MAX_YEAR_RATE = new BN("3");//200%
+MAX_YEAR_RATE = MAX_YEAR_RATE.times(new BN("1000000000000000000000000000"));
+console.log("MAX_YEAR_RATE "+MAX_YEAR_RATE.toString(10));
+//////////////////////////////////////////////////////////////
+let MIN_YEAR_RATE = new BN("1.01");//1%
+MIN_YEAR_RATE = MIN_YEAR_RATE.times(new BN("1000000000000000000000000000"));
+console.log("DAY_MIN_INTEREST_RATE "+MIN_YEAR_RATE.toString(10));
+
+////////////////////////////////////////////////////////////////
+let YEAR_INTEREST_RATE = new BN("0.6");
+let DAY_INTEREST_RATE = YEAR_INTEREST_RATE.div(new BN(365));//日利息 5%0
+let INTEREST_RATE = new BN("1").plus(new BN(DAY_INTEREST_RATE));
+DIV24= new BN("1").div(24);//div one day 24 hours
+INTEREST_RATE = Math.pow(INTEREST_RATE,DIV24) - 1;
+//console.log("INTEREST_RATE",INTEREST_RATE);
+
 INTEREST_RATE = new BN(INTEREST_RATE).times(new BN("1000000000000000000000000000"));
 
 console.log("INTEREST_RATE "+INTEREST_RATE.toString(10));
-//return;
+
 
 contract('Saving Pool Farm', function (accounts){
   let rewardOneDay = web3.utils.toWei('5000', 'ether');
@@ -111,7 +122,7 @@ contract('Saving Pool Farm', function (accounts){
   let endTime = startTime + 3600*24*365;
 //////////////////////////////////////////////////////////////////////////////////////////
   {
-      let msgData = farminst.contract.methods.setInterestInfo(INTEREST_RATE, 3600).encodeABI();
+      let msgData = farminst.contract.methods.setInterestInfo(INTEREST_RATE, 3600,MAX_YEAR_RATE,MIN_YEAR_RATE).encodeABI();
       let hash = await utils.createApplication(mulSiginst, operator0, farminst.address, 0, msgData);
       let index = await mulSiginst.getApplicationCount(hash);
       index = index.toNumber() - 1;
@@ -121,7 +132,7 @@ contract('Saving Pool Farm', function (accounts){
       await mulSiginst.signApplication(hash, index, {from: accounts[8]});
   }
   //set interest rate
-  res = await farminst.setInterestInfo(INTEREST_RATE,3600,{from:});
+  res = await farminst.setInterestInfo(INTEREST_RATE, 3600,MAX_YEAR_RATE,MIN_YEAR_RATE,{from: operator0});
   assert.equal(res.receipt.status,true);
 
 
@@ -136,7 +147,7 @@ contract('Saving Pool Farm', function (accounts){
       await mulSiginst.signApplication(hash, index, {from: accounts[8]});
   }
   //set mine Rate
-  res = await farminst.setMineRate(web3.utils.toWei(""+360,"ether"),day);
+  res = await farminst.setMineRate(web3.utils.toWei(""+360,"ether"),day,{from:operator0});
   assert.equal(res.receipt.status,true);
 
 
@@ -150,15 +161,15 @@ contract('Saving Pool Farm', function (accounts){
       await mulSiginst.signApplication(hash, index, {from: accounts[7]});
       await mulSiginst.signApplication(hash, index, {from: accounts[8]});
   }
-  res = await farminst.setFarmTime(startTime,endTime);
-  assert.equal(res.receipt.status,true);
+      res = await farminst.setFarmTime(startTime,endTime,{from:operator0});
+      assert.equal(res.receipt.status,true);
 
-  ////////////////////////////////////////////////////////////////////////////////////////////
-  res = await melt.transfer(farminst.address,VAL_10M,{from:accounts[0]});
-  assert.equal(res.receipt.status,true);
+      ////////////////////////////////////////////////////////////////////////////////////////////
+      res = await melt.transfer(farminst.address,VAL_10M,{from:accounts[0]});
+      assert.equal(res.receipt.status,true);
 
-  res = await h2o.mint(farminst.address,VAL_10M);
-  assert.equal(res.receipt.status,true);
+      res = await h2o.mint(farminst.address,VAL_10M);
+      assert.equal(res.receipt.status,true);
 
       res = await melt.transfer(staker1,VAL_10M,{from:accounts[0]});
       assert.equal(res.receipt.status,true);
@@ -187,10 +198,9 @@ contract('Saving Pool Farm', function (accounts){
     res = await farminst.deposit(VAL_1M,{from:staker2});
     assert.equal(res.receipt.status,true);
 
-
   })
 
-
+/*
   it("[0020] check staker1 mined balance,should pass", async()=>{
      time.increase(7200);//2000 sec
      let res = await farminst.totalStaked();
@@ -408,5 +418,6 @@ contract('Saving Pool Farm', function (accounts){
         console.log("staker1 intterest",res[0].toString(),"melt mine pending",res[1].toString());
 
     })
+*/
 
 })
