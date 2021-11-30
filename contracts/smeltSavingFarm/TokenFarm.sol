@@ -86,7 +86,7 @@ contract TokenFarm is Halt,TokenFarmData,Admin {
 
     function earned(address account)  public view returns(uint256) {
         return IERC20(manager).balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
-     }
+    }
 
     function getReward(address account) public updateReward(account) onlyAdmin {
         uint256 reward = earned(account);

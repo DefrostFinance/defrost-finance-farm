@@ -62,7 +62,10 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         smelt.setFarmFlag(flag);
     }
 
-    function _setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate) internal {
+    function _setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate)
+        external
+        onlyOrigin
+    {
 
         if (accumulatedRate == 0){
             accumulatedRate = rayDecimals;
@@ -102,10 +105,9 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         }
     }
 
-    function getMeltAmout(uint256 _smeltAMount) external view returns (uint256) {
+    function getMeltAmount(uint256 _smeltAmount) public view returns (uint256) {
         uint256 newRate = newAccumulatedRate();
-        _smeltAMount = _smeltAMoun.mul(newRate).div(rayDecimals);
-        return _smeltAMount;
+        return _smeltAmount.mul(newRate).div(rayDecimals);
     }
 
     function deposit(uint256 _amount)
@@ -122,11 +124,10 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
         uint256 smeltAmount = _amount.mul(rayDecimals)/accumulatedRate;
         smelt.mint(msg.sender,smeltAmount);
 
-        assetInfoMap[msg.sender].originAsset = assetInfoMap[msg.sender].originAsset.add(_amount);
-
         emit Save(msg.sender,address(melt), _amount);
     }
 
+    //user possible to get smelt by transfer from another address
     function withdraw( uint256 _smeltAmount/*smelt amout*/)
         external
         nonReentrant
@@ -141,12 +142,6 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
             uint256 meltAmount = _smeltAmount.mul(accumulatedRate)/rayDecimals;
 
             smelt.burn(msg.sender,_smeltAmount);
-
-            if(meltAmount > assetInfoMap[msg.sender].originAsset) {//because there are interest
-                assetInfoMap[msg.sender].originAsset = 0;
-            } else {
-                assetInfoMap[msg.sender].originAsset = assetInfoMap[msg.sender].originAsset.sub(meltAmount);
-            }
 
             IERC20(melt).transfer(msg.sender, meltAmount);
 
@@ -184,23 +179,15 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
     //     * @return The number of staking tokens deposited for addr.
     //     */
     function totalStakedFor(address _account) public view returns (uint256) {
-         return assetInfoMap[msg.sender].originAsset;
+         return getMeltAmount(smelt.balanceOf(_account));
     }
 
     function allPendingReward(address _account) public view returns(uint256,uint256){
-        uint256 smeltCnvAmount = smelt.balanceOf(msg.sender);
-        uint256 newRate = newAccumulatedRate();
-        uint256 interest = smeltCnvAmount.mul(newRate).div(rayDecimals);
-
-        if(interest>assetInfoMap[msg.sender].originAsset){
-            interest = interest.sub(assetInfoMap[msg.sender].originAsset);
-        }
-
-        return (interest,tokenFarm.earned(_account));
+        return (getMeltAmount(smelt.balanceOf(_account)),tokenFarm.earned(_account));
     }
 
     function totalStaked() public view returns (uint256){
-       return totalAssetAmount;
+       return getMeltAmount(smelt.totalSupply());
     }
 
     function getbackLeftMiningToken(address _reciever)  public
@@ -208,15 +195,14 @@ contract smeltSavingsFarm is savingsPoolData,IERC20,proxyOwner{
     {
         //get back h2o
         tokenFarm.getbackLeftMiningToken(_reciever);
-
+        uint256 totalasset = getMeltAmount(smelt.totalSupply());
         //get back melt for future interest
-        if(IERC20(melt).balanceOf(address(this))>totalAssetAmount) {
-            uint256 bal =  IERC20(melt).balanceOf(address(this)).sub(totalAssetAmount);
+        if(IERC20(melt).balanceOf(address(this))>totalasset) {
+            uint256 bal =  IERC20(melt).balanceOf(address(this)).sub(totalasset);
             IERC20(melt).transfer(_reciever,bal);
         }
 
     }
-
 
     function getMineInfo() public view returns (int256,uint256,uint256,uint256) {
         uint256 rewardPerduration;

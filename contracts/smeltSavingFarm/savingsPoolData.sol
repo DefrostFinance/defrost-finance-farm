@@ -35,6 +35,7 @@ contract savingsPoolData is Halt,ReentrancyGuard {
     //interest rate
     int256 internal interestRate;
     uint256 internal interestInterval;
+
     struct assetInfo{
         uint256 originAsset;
         uint256 assetAndInterest;
