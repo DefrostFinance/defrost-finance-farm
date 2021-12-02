@@ -122,7 +122,7 @@ contract('Saving Pool Farm', function (accounts){
   let endTime = startTime + 3600*24*365;
 //////////////////////////////////////////////////////////////////////////////////////////
   {
-      let msgData = farminst.contract.methods.setInterestInfo(INTEREST_RATE, 3600,MAX_YEAR_RATE,MIN_YEAR_RATE).encodeABI();
+      let msgData = farminst.contract.methods.setInterestInfo(INTEREST_RATE, 3600).encodeABI();
       let hash = await utils.createApplication(mulSiginst, operator0, farminst.address, 0, msgData);
       let index = await mulSiginst.getApplicationCount(hash);
       index = index.toNumber() - 1;
@@ -132,7 +132,7 @@ contract('Saving Pool Farm', function (accounts){
       await mulSiginst.signApplication(hash, index, {from: accounts[8]});
   }
   //set interest rate
-  res = await farminst.setInterestInfo(INTEREST_RATE, 3600,MAX_YEAR_RATE,MIN_YEAR_RATE,{from: operator0});
+  res = await farminst.setInterestInfo(INTEREST_RATE, 3600,{from: operator0});
   assert.equal(res.receipt.status,true);
 
 

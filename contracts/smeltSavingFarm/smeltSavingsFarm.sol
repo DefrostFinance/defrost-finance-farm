@@ -65,7 +65,7 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
         smelt.setFarmFlag(flag);
     }
 
-    function setInteretMaxMinRatio(uint256 _maxRate, uint256 _minRate)
+    function setInterestMaxMinRatio(uint256 _maxRate, uint256 _minRate)
         external
         onlyOrigin {
         maxRate = _maxRate;
