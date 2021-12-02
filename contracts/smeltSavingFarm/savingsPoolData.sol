@@ -10,9 +10,11 @@ import "./TokenFarm.sol";
 import "./smeltToken/smeltToken.sol";
 
 contract savingsPoolData is Halt,ReentrancyGuard {
-    string private name_;
-    string private symbol_;
-    uint8  private decimals_;
+//    string private name_;
+//    string private symbol_;
+//    uint8  private decimals_;
+    uint256 public maxRate = 30e26;//1+200%
+    uint256 public minRate = 0;
 
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowed;

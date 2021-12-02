@@ -65,7 +65,14 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
         smelt.setFarmFlag(flag);
     }
 
-    function setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate)
+    function setInteretMaxMinRatio(uint256 _maxRate, uint256 _minRate)
+        external
+        onlyOrigin {
+        maxRate = _maxRate;
+        minRate = _minRate;
+    }
+
+    function setInterestInfo(int256 _interestRate,uint256 _interestInterval)
         external
         onlyOrigin
     {
@@ -77,7 +84,7 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
         require(_interestRate<=1e27 && _interestRate>=-1e27,"input stability fee is too large");
         require(_interestInterval>0,"input mine Interval must larger than zero");
 
-        uint256 newLimit = rpower(uint256(1e27+_interestRate),31536000/_interestInterval,rayDecimals);
+        uint256 newLimit = rpower(uint256(1e27+_interestRate),/*one year*/31536000/_interestInterval,rayDecimals);
         require(newLimit<=maxRate && newLimit>=minRate,"interest rate is out of range");
 
         _interestSettlement();
