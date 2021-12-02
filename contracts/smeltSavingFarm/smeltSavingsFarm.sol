@@ -7,6 +7,7 @@ pragma solidity ^0.5.16;
 import "../modules/SafeMath.sol";
 import "../modules/proxyOwner.sol";
 import "../modules/IERC20.sol";
+import "../modules/SafeERC20.sol";
 import "./savingsPoolData.sol";
 import "./TokenFarm.sol";
 import "./smeltToken/smeltToken.sol";
@@ -17,6 +18,7 @@ import "./smeltToken/smeltToken.sol";
  */
 contract smeltSavingsFarm is savingsPoolData,proxyOwner{
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
     /**
      * @dev default function for foundation input miner coins.
      */
@@ -118,7 +120,7 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
     {
         require(interestRate>0,"interest rate is not set");
 
-        require(IERC20(melt).transferFrom(msg.sender, address(this), _amount),"token transferFrom failed!");
+        IERC20(melt).safeTransferFrom(msg.sender, address(this), _amount);
 
         _interestSettlement();
 
@@ -148,7 +150,7 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
 
             smelt.burn(msg.sender,_smeltAmount);
 
-            IERC20(melt).transfer(msg.sender, meltAmount);
+            IERC20(melt).safeTransfer(msg.sender, meltAmount);
 
             emit Withdraw(msg.sender,address(melt), meltAmount);
         }
@@ -204,7 +206,7 @@ contract smeltSavingsFarm is savingsPoolData,proxyOwner{
         //get back melt for future interest
         if(IERC20(melt).balanceOf(address(this))>totalasset) {
             uint256 bal =  IERC20(melt).balanceOf(address(this)).sub(totalasset);
-            IERC20(melt).transfer(_reciever,bal);
+            IERC20(melt).safeTransfer(_reciever,bal);
         }
 
     }

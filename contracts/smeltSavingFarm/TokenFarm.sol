@@ -8,11 +8,13 @@ import "../modules/Admin.sol";
 import "../modules/Ownable.sol";
 import "../modules/SafeMath.sol";
 import "../modules/IERC20.sol";
+import "../modules/SafeERC20.sol";
 import "../modules/Address.sol";
 import "../modules/Admin.sol";
 
 contract TokenFarm is Halt,TokenFarmData,Admin {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     event RewardPaid(address rewardToken,address indexed user, uint256 reward);
 
@@ -60,7 +62,7 @@ contract TokenFarm is Halt,TokenFarmData,Admin {
         onlyAdmin
     {
         uint256 bal =  IERC20(rewardToken).balanceOf(manager);
-        IERC20(rewardToken).transferFrom(manager,reciever,bal);
+        IERC20(rewardToken).safeTransferFrom(manager,reciever,bal);
     }
 
 //////////////////////////public function/////////////////////////////////    
@@ -92,13 +94,7 @@ contract TokenFarm is Halt,TokenFarmData,Admin {
         uint256 reward = earned(account);
         if (reward > 0) {
             rewards[account] = 0;
-            uint256 preBalance = IERC20(rewardToken).balanceOf(address(manager));
-
-            IERC20(rewardToken).transferFrom(manager,account, reward);
-
-            uint256 afterBalance = IERC20(rewardToken).balanceOf(address(manager));
-
-            require(preBalance - afterBalance==reward,"reward transfer error!");
+            IERC20(rewardToken).safeTransferFrom(manager,account, reward);
             emit RewardPaid(rewardToken,account, reward);
         }
     }
