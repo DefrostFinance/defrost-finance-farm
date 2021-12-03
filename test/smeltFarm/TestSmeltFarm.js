@@ -46,8 +46,17 @@ INTEREST_RATE = Math.pow(INTEREST_RATE,DIV24) - 1;
 
 INTEREST_RATE = new BN(INTEREST_RATE).times(new BN("1000000000000000000000000000"));
 
-console.log("INTEREST_RATE "+INTEREST_RATE.toString(10));
+//console.log("INTEREST_RATE "+INTEREST_RATE.toString(10));
 
+/////////////////////////////////////////////////////////////////
+
+INTEREST_RATE = new BN("1").plus(new BN(0.002));//日 2/1000
+DIV24= new BN("1").div(24);//div one day 24 hours
+INTEREST_RATE = Math.pow(INTEREST_RATE,DIV24) - 1;
+//console.log("INTEREST_RATE",INTEREST_RATE);
+
+INTEREST_RATE = new BN(INTEREST_RATE).times(new BN("1000000000000000000000000000"));
+console.log("INTEREST_RATE "+INTEREST_RATE.toString(10));
 
 contract('Saving Pool Farm', function (accounts){
   let rewardOneDay = web3.utils.toWei('5000', 'ether');
