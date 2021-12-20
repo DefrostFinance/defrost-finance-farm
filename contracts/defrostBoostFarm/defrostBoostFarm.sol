@@ -43,7 +43,7 @@ interface IChef {
 }
 
 
-contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
+contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
