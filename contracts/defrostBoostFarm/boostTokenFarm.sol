@@ -34,12 +34,12 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
         _;
     }
 
-    constructor(address _boostFarm,
-                address _rewardToken,
-                address _multiSignature,
-                address origin0,
-                address origin1)
-      proxyOwner(_multiSignature,origin0,origin1)
+    constructor(address _multiSignature,
+                address _origin0,
+                address _origin1,
+                address _boostFarm,
+                address _rewardToken)
+      proxyOwner(_multiSignature,_origin0,_origin1)
       public
     {
         boostFarm = _boostFarm;
@@ -58,6 +58,7 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
         duration = _duration;
     }
 
+    //need set start time  as same as boostFarm
     function setPeriodFinish(uint256 _startime,uint256 _endtime) public onlyOrigin updateReward(address(0)) {
         require(_startime>now);
         require(_endtime>_startime);

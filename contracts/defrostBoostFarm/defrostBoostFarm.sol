@@ -63,8 +63,8 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     event BoostDeposit(address indexed user,  uint256 amount);
     event BoostWithdraw(address indexed user, uint256 amount);
 
-    constructor(address _multiSignature,address origin0,address origin1)
-        proxyOwner(_multiSignature,origin0,origin1)
+    constructor(address _multiSignature,address _origin0,address _origin1)
+        proxyOwner(_multiSignature,_origin0,_origin1)
         public
     {
 
