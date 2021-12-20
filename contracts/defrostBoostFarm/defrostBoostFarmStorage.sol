@@ -103,12 +103,11 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
 
     mapping (address => bool) public whiteListLpUserInfo;
 
-    //use cPhx
     address public rewardToken;
     address public oracle;
     address public h2o;
-    uint256 public fixedTeamRatio;
-    uint256 public fixedWhitelistRatio;
+    uint256 public fixedTeamRatio = 10;
+    uint256 public fixedWhitelistRatio = 100;
     uint256 public whiteListfloorLimit;
 
     address public teamRewardSc;
