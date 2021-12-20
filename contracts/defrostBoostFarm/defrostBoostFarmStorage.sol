@@ -129,6 +129,6 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     uint256 internal totalsupply;
     mapping(address => uint256) internal balances;
 
-    BoostTokenFarm public tokenFarm;
+    address public tokenFarm;
 
 }

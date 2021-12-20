@@ -20,4 +20,6 @@ contract BoostTokenFarmData {
     
     uint256 public periodFinish;
     uint256 public startTime;
+
+    address public boostFarm;
 }

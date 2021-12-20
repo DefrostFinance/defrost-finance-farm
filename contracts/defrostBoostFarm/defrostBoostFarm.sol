@@ -4,7 +4,6 @@ import "../modules/IERC20.sol";
 import "../modules/SafeMath.sol";
 import "../modules/SafeERC20.sol";
 import "../modules/proxyOwner.sol";
-import "./boostTokenFarm.sol";
 
 interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
@@ -16,6 +15,14 @@ interface IReleaseSC {
     function dispatchTimes() external view returns (uint256);
     function lockedBalanceOf(address account) external view returns(uint256);
     function userFarmClaimedBalances(address account) external view returns (uint256);
+}
+
+interface ITokenFarmSC {
+    function stake(address account) external;
+    function unstake(address account) external;
+    function getReward(address account) external;
+    function earned(address account)  external view returns(uint256);
+    function getMineInfo() external view returns (uint256,uint256);
 }
 
 
@@ -643,7 +650,8 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
                                 address _oracle,
                                 address _h2o,
                                 address _teamRewardSc,
-                                address _releaseSc)
+                                address _releaseSc,
+                                address _tokenFarm)
         public OwnerOrOrigin
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
@@ -658,10 +666,8 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         releaseSc = _releaseSc;
 
         /////////////////////////////////////////////////////
-        tokenFarm = new BoostTokenFarm(address(this),h2o);
-        tokenFarm.addAdmin(address(smelt));
+        tokenFarm = _tokenFarm;
         IERC20(h2o).approve(address(tokenFarm),uint256(-1));
-
     }
 
     function totalStaked(uint256 _pid) public view returns (uint256){
@@ -671,11 +677,10 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         return pool.currentSupply;
     }
 
-    function getMineInfo(uint256 _pid) public view returns (uint256,uint256,uint256,uint256) {
+    function getMineInfo(uint256 _pid) public view returns (uint256,uint256,uint256,uint256,uint256) {
         return (poolmineinfo[_pid].totalMineReward,poolmineinfo[_pid].duration,
-           poolInfo[_pid].bonusStartBlock,poolInfo[_pid].rewardPerBlock);
+           poolInfo[_pid].bonusStartBlock,poolInfo[_pid].rewardPerBlock,poolInfo[_pid].bonusStartTime);
     }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -787,28 +792,6 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         BoostTokenAmountStepAmount = _BoostTokenAmountStepAmount;
     }
 
-    function setBoostFarmTime(uint256 _startime,uint256 _endtime)
-        external
-        onlyOrigin
-    {
-        tokenFarm.setPeriodFinish(_startime,_endtime);
-    }
-
-    function setBoostMineRate(uint256 _reward,uint256 _duration)
-        external
-        onlyOrigin
-    {
-        tokenFarm.setMineRate(_reward,_duration);
-    }
-
-    function getbackLeftBoostMiningToken(address _reciever)  public
-        onlyOrigin
-    {
-        //get back h2o
-        tokenFarm.getbackLeftMiningToken(_reciever);
-    }
-
-
     function boostDeposit(uint256 _amount) notHalted nonReentrant external{
         require(_amount > 0, "cannot stake 0");
 
@@ -817,18 +800,18 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         totalsupply = totalsupply.add(_amount);
         balances[msg.sender] = balances[msg.sender].add(_amount);
         //update token mine
-        tokenFarm.stake(msg.sender);
+        ITokenFarmSC(tokenFarm).stake(msg.sender);
     }
 
     function boostwithdraw( uint256 _amount) notHalted nonReentrant external{
         if(_amount ==0) {
-            tokenFarm.getReward(msg.sender);
+            ITokenFarmSC(tokenFarm).getReward(msg.sender);
         } else {
             totalsupply = totalsupply.sub(_amount);
             balances[msg.sender] = balances[msg.sender].sub(_amount);
 
             //updated token mine
-            tokenFarm.unstake(msg.sender);
+            ITokenFarmSC(tokenFarm).unstake(msg.sender);
 
             IERC20(smelt).safeTransfer(msg.sender, _amount);
         }
@@ -850,7 +833,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function boostPendingReward(address _account) public view returns(uint256){
-        return tokenFarm.earned(_account);
+        return ITokenFarmSC(tokenFarm).earned(_account);
     }
 
     function boostTotalStaked() public view returns (uint256){
@@ -859,7 +842,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 
 
     function getBoostMineInfo() public view returns (uint256,uint256) {
-        return tokenFarm.getMineInfo();
+        return ITokenFarmSC(tokenFarm).getMineInfo();
     }
 
     function balanceOf(address _account) external view returns (uint256) {
