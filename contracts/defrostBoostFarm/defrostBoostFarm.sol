@@ -60,6 +60,9 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event GetBackLeftRewardToken(address to, uint256 amount);
 
+    event BoostDeposit(address indexed user,  uint256 amount);
+    event BoostWithdraw(address indexed user, uint256 amount);
+
     constructor(address _multiSignature,address origin0,address origin1)
         proxyOwner(_multiSignature,origin0,origin1)
         public
@@ -130,7 +133,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
                  uint256 _totalMineReward,
                  uint256 _duration,
                  uint256 _secPerBlk
-             ) public OwnerOrOrigin {
+             ) public onlyOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
         //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
@@ -182,7 +185,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
                             uint256 _totalMineReward,
                             uint256 _duration)
             public
-            OwnerOrOrigin
+            onlyOrigin
     {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(_bonusEndBlock > block.number, "_bonusEndBlock <= block.number");
@@ -259,7 +262,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         return allTotalUnclaimed;
     }
 
-    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public OwnerOrOrigin {
+    function distributeFinalExtReward(uint256 _pid, uint256 _amount) public onlyOrigin {
 
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
@@ -291,7 +294,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         rate = multiplier.mul(extRewardPerBlock).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
     }
 
-    function extRewardPerBlock(uint256 _pid) public view returns(uint256){
+    function extRewardPerBlock(uint256 _pid) public view returns(uint256) {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -316,7 +319,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         return (depositAmount, deFrostReward, joeReward);
     }
 
-    function enableDoubleFarming(uint256 _pid, bool enable) public OwnerOrOrigin {
+    function enableDoubleFarming(uint256 _pid, bool enable) public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -354,7 +357,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     }
 
-    function setDoubleFarming(uint256 _pid,address extFarmAddr,uint256 _extPid) public OwnerOrOrigin {
+    function setDoubleFarming(uint256 _pid,address extFarmAddr,uint256 _extPid) public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
@@ -374,7 +377,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     }
 
-    function disableExtEnableClaim(uint256 _pid)public OwnerOrOrigin {
+    function disableExtEnableClaim(uint256 _pid)public onlyOrigin {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
 
@@ -407,10 +410,6 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         return userPendingJoe;
     }
-    //uint256 pendingJoe,
-    //address bonusTokenAddress,
-    //string memory bonusTokenSymbol,
-    //uint256 pendingBonusToken
 
     function depositLPToChef(uint256 _pid,uint256 _amount) internal {
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
@@ -652,7 +651,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
                                 address _teamRewardSc,
                                 address _releaseSc,
                                 address _tokenFarm)
-        public OwnerOrOrigin
+        public onlyOrigin
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
         require(_oracle!=address(0),"_rewardToken address is 0");
@@ -685,13 +684,13 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
     function setFixedTeamRatio(uint256 _ratio)
-        public OwnerOrOrigin
+        public onlyOrigin
     {
         fixedTeamRatio = _ratio;
     }
 
     function setFixedWhitelistPara(uint256 _incRatio,uint256 _whiteListfloorLimit)
-       public OwnerOrOrigin
+       public onlyOrigin
     {
         //_incRatio,0 whiteList increase will stop
         fixedWhitelistRatio = _incRatio;
@@ -699,7 +698,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function setWhiteList(address[] memory _user)
-        public OwnerOrOrigin
+        public onlyOrigin
     {
         require(_user.length>0,"array length is 0");
         for(uint256 i=0;i<_user.length;i++) {
@@ -781,7 +780,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    function setBoostFarmTime(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep)
+    function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep)
         external
         onlyOrigin
     {
@@ -792,7 +791,7 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         BoostTokenAmountStepAmount = _BoostTokenAmountStepAmount;
     }
 
-    function boostDeposit(uint256 _amount) notHalted nonReentrant external{
+    function boostDeposit(uint256 _amount) notHalted nonReentrant external {
         require(_amount > 0, "cannot stake 0");
 
         IERC20(smelt).safeTransferFrom(msg.sender,address(this), _amount);
@@ -801,11 +800,16 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
         balances[msg.sender] = balances[msg.sender].add(_amount);
         //update token mine
         ITokenFarmSC(tokenFarm).stake(msg.sender);
+
+        emit BoostDeposit(msg.sender,_amount);
+
     }
 
     function boostwithdraw( uint256 _amount) notHalted nonReentrant external{
         if(_amount ==0) {
+
             ITokenFarmSC(tokenFarm).getReward(msg.sender);
+
         } else {
             totalsupply = totalsupply.sub(_amount);
             balances[msg.sender] = balances[msg.sender].sub(_amount);
@@ -814,11 +818,14 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
             ITokenFarmSC(tokenFarm).unstake(msg.sender);
 
             IERC20(smelt).safeTransfer(msg.sender, _amount);
+
+            emit BoostWithdraw(msg.sender, _amount);
         }
     }
 
     function getUserBoostFactor(uint256 _amount)
-    public view returns(uint256) {
+        public view returns(uint256)
+    {
 
         if(_amount<BaseBoostTokenAmount) {
             return RATIO_DENOM;
@@ -839,7 +846,6 @@ contract defrostFarm is defrostBoostFarmStorage,proxyOwner{
     function boostTotalStaked() public view returns (uint256){
         return totalsupply;
     }
-
 
     function getBoostMineInfo() public view returns (uint256,uint256) {
         return ITokenFarmSC(tokenFarm).getMineInfo();

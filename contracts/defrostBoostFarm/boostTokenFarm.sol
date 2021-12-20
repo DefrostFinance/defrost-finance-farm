@@ -75,8 +75,8 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
     function getbackLeftMiningToken(address reciever)  public
         onlyOrigin
     {
-        uint256 bal =  IERC20(rewardToken).balanceOf(manager);
-        IERC20(rewardToken).safeTransferFrom(manager,reciever,bal);
+        uint256 bal =  IERC20(rewardToken).balanceOf(boostFarm);
+        IERC20(rewardToken).safeTransferFrom(boostFarm,reciever,bal);
     }
 
 //////////////////////////public function/////////////////////////////////    
@@ -91,29 +91,26 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
      }
 
     function rewardPerToken() public view returns(uint256) {
-        if (IERC20(manager).totalSupply() == 0 || now < startTime) {
+        if (IERC20(boostFarm).totalSupply() == 0 || now < startTime) {
             return rewardPerTokenStored;
         }
 
         return rewardPerTokenStored.add(
-            lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(IERC20(manager).totalSupply())
+            lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(IERC20(boostFarm).totalSupply())
         );
     }
 
     function earned(address account)  public view returns(uint256) {
-        return IERC20(manager).balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
+        return IERC20(boostFarm).balanceOf(account).mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
     }
 
     function getReward(address account) public updateReward(account) onlyBoostFarm {
         uint256 reward = earned(account);
         if (reward > 0) {
             rewards[account] = 0;
-            IERC20(rewardToken).safeTransferFrom(manager,account, reward);
+            IERC20(rewardToken).safeTransferFrom(boostFarm,account, reward);
             emit RewardPaid(rewardToken,account, reward);
         }
-    }
-
-    function update(address account) public updateReward(account) onlyBoostFarm {
     }
 
     function getMineInfo() public view returns (uint256,uint256) {
