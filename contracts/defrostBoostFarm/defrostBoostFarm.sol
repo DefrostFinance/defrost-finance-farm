@@ -97,32 +97,32 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     }
     
-    function getExtFarmInfo(uint256 _pid) external view returns (
-		address extFarmAddr,  
-        bool extEnableDeposit,
-        uint256 extPid,
-        uint256 extRewardPerShare,
-        uint256 extTotalDebtReward,
-        bool extEnableClaim,
-        uint256 extAccPerShare){
+//    function getExtFarmInfo(uint256 _pid) external view returns (
+//		address extFarmAddr,
+//        bool extEnableDeposit,
+//        uint256 extPid,
+//        uint256 extRewardPerShare,
+//        uint256 extTotalDebtReward,
+//        bool extEnableClaim,
+//        uint256 extAccPerShare){
+//
+//        require(_pid < poolInfo.length,"pid >= poolInfo.length");
+//        PoolInfo storage pool = poolInfo[_pid];
+//
+//        return (
+//            pool.extFarmInfo.extFarmAddr,
+//            pool.extFarmInfo.extEnableDeposit,
+//            pool.extFarmInfo.extPid,
+//            pool.extFarmInfo.extRewardPerShare,
+//            pool.extFarmInfo.extTotalDebtReward,
+//            pool.extFarmInfo.extEnableClaim,
+//            pool.extFarmInfo.extRewardPerShare);
+//
+//    }
 
-        require(_pid < poolInfo.length,"pid >= poolInfo.length");
-        PoolInfo storage pool = poolInfo[_pid];
-
-        return (
-            pool.extFarmInfo.extFarmAddr,
-            pool.extFarmInfo.extEnableDeposit,
-            pool.extFarmInfo.extPid,
-            pool.extFarmInfo.extRewardPerShare,
-            pool.extFarmInfo.extTotalDebtReward,
-            pool.extFarmInfo.extEnableClaim,
-            pool.extFarmInfo.extRewardPerShare);
-
-    }
-
-    function poolLength() external view returns (uint256) {
-        return poolInfo.length;
-    }
+//    function poolLength() external view returns (uint256) {
+//        return poolInfo.length;
+//    }
 
     // Add a new lp to the pool. Can only be called by the owner.
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
@@ -307,7 +307,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         return extReward;
     }
-    
+
     function allPendingReward(uint256 _pid,address _user) public view returns(uint256,uint256,uint256){
         uint256 depositAmount;
         uint256 deFrostReward;

@@ -24,7 +24,7 @@ async function testSigViolation(message,testFunc){
         await testFunc();
         return true;
     } catch (error) {
-        //console.log(error);
+        console.log(error);
         return false;
     }
 }

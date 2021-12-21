@@ -53,7 +53,7 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     }
 
     struct ExtFarmInfo{
-        address extFarmAddr;  
+        address extFarmAddr;
         bool extEnableDeposit;
         uint256 extPid;
         uint256 extRewardPerShare;
@@ -92,6 +92,7 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
         uint256 bonusStartTime;
 
         ExtFarmInfo extFarmInfo;
+
     }
 
 
@@ -115,6 +116,7 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
 
     mapping (uint256=>PoolMineInfo) public poolmineinfo;
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;// Info of each user that stakes LP tokens.
+
     PoolInfo[] poolInfo;   // Info of each pool.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
