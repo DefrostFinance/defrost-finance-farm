@@ -650,13 +650,17 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
                                 address _h2o,
                                 address _teamRewardSc,
                                 address _releaseSc,
-                                address _tokenFarm)
+                                address _tokenFarm,
+                                address _smelt)
         public onlyOrigin
     {
         require(_rewardToken!=address(0),"_rewardToken address is 0");
         require(_oracle!=address(0),"_rewardToken address is 0");
         require(_teamRewardSc!=address(0),"_rewardToken address is 0");
         require(_releaseSc!=address(0),"_rewardToken address is 0");
+
+        require(_tokenFarm!=address(0),"_tokenFarm address is 0");
+        require(_smelt!=address(0),"_smelt address is 0");
 
         rewardToken = _rewardToken;
         oracle = _oracle;
@@ -666,6 +670,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         /////////////////////////////////////////////////////
         tokenFarm = _tokenFarm;
+        smelt = _smelt;
         IERC20(h2o).approve(address(tokenFarm),uint256(-1));
     }
 
