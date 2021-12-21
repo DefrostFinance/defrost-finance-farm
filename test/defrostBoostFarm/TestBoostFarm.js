@@ -590,4 +590,41 @@ contract('Boost farm Test', function (accounts){
 
     })
 
+    it("[0050] check stakers withdraw boost stake,should pass", async()=>{
+        let preBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
+
+        {
+            console.log("set reward rate");
+            let duration = 3600*24;
+            let rewardDay = web3.utils.toWei(""+3600,'ether');
+
+            let msgData = tokenFarmInt.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
+            let hash = await utils.createApplication(mulSiginst, accounts[8], tokenFarmInt.address, 0, msgData);
+
+            let index = await mulSiginst.getApplicationCount(hash);
+            index = index.toNumber() - 1;
+            console.log(index);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            assert.equal(res.receipt.status, true);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[8]})
+            assert.equal(res.receipt.status, true);
+
+            res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved", async function () {
+                await  tokenFarmInt.getbackLeftMiningToken(staker1,{from:accounts[8]});
+            });
+
+            assert.equal(res, true, "should return true");
+
+        }
+
+        let afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker1));
+        console.log("h2o reward getback=" + (afterBalance - preBalance));
+
+
+
+    })
+
+
 })
