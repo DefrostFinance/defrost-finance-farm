@@ -527,8 +527,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         if (user.amount > 0) {
             uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
             if(pending > 0) {
-                //IERC20(rewardToken).transfer(msg.sender, pending);//original
-                mintUserRewardAndTeamReward(_pid,msg.sender,pending);
+               mintUserRewardAndTeamReward(_pid,msg.sender,pending);
             }
         }
 
@@ -563,7 +562,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
 
         if(pending > 0) {
-            //IERC20(rewardToken).transfer(msg.sender, pending);
             mintUserRewardAndTeamReward(_pid,msg.sender,pending);
         }
 
@@ -620,8 +618,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function quitExtFarm(address extFarmAddr, address _to) public onlyOrigin {
-        require(_to != address(0), "_to == 0");
-        require(extFarmAddr != address(0), "extFarmAddr == 0");
 
         IERC20 joeToken = IERC20(IChef(extFarmAddr).joe());
 
@@ -639,7 +635,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function getBackLeftRewardToken(address _to) public onlyOrigin {
-        require(_to != address(0), "_to == 0");
         uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
         safeRewardTransfer(_to, rewardTokenBal);
         emit GetBackLeftRewardToken(_to, rewardTokenBal);
@@ -782,7 +777,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         uint256 claimed = IReleaseSC(releaseSc).userFarmClaimedBalances(_user);
 
         return (depositAmount,claimable,locked,claimed,joeReward);
-
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep)
@@ -796,11 +790,11 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         BoostTokenAmountStepAmount = _BoostTokenAmountStepAmount;
     }
 
-    function boostDeposit(uint256 _amount) notHalted nonReentrant external {
-        require(_amount > 0, "cannot stake 0");
+    function boostDeposit(uint256 _pid,uint256 _amount) external {
 
-        //update token mine
-        ITokenFarmSC(tokenFarm).stake(msg.sender);
+        withdraw(_pid,0);
+
+        ITokenFarmSC(tokenFarm).getReward(msg.sender);
 
         IERC20(smelt).safeTransferFrom(msg.sender,address(this), _amount);
 
@@ -810,23 +804,19 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         emit BoostDeposit(msg.sender,_amount);
     }
 
-    function boostwithdraw( uint256 _amount) notHalted nonReentrant external{
-        if(_amount ==0) {
+    function boostwithdraw(uint256 _pid,uint256 _amount) external{
 
-            ITokenFarmSC(tokenFarm).getReward(msg.sender);
+        withdraw(_pid,0);
 
-        } else {
+        ITokenFarmSC(tokenFarm).getReward(msg.sender);
 
-            //updated token mine
-            ITokenFarmSC(tokenFarm).unstake(msg.sender);
+        totalsupply = totalsupply.sub(_amount);
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
 
-            totalsupply = totalsupply.sub(_amount);
-            balances[msg.sender] = balances[msg.sender].sub(_amount);
+        IERC20(smelt).safeTransfer(msg.sender, _amount);
 
-            IERC20(smelt).safeTransfer(msg.sender, _amount);
+        emit BoostWithdraw(msg.sender, _amount);
 
-            emit BoostWithdraw(msg.sender, _amount);
-        }
     }
 
     function getUserBoostFactor(uint256 _amount)

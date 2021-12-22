@@ -118,11 +118,11 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
         return (rewardPerduration,duration);
     }
 
-    function stake(address account) public updateReward(account) onlyBoostFarm {
-        require(startTime>0,"farm is not inited");
-    }
-
-    function unstake(address account) public updateReward(account) onlyBoostFarm {
-    }
+//    function stake(address account) public updateReward(account) onlyBoostFarm {
+//        require(startTime>0,"farm is not inited");
+//    }
+//
+//    function unstake(address account) public updateReward(account) onlyBoostFarm {
+//    }
 
 }
