@@ -816,11 +816,12 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
             ITokenFarmSC(tokenFarm).getReward(msg.sender);
 
         } else {
-            totalsupply = totalsupply.sub(_amount);
-            balances[msg.sender] = balances[msg.sender].sub(_amount);
 
             //updated token mine
             ITokenFarmSC(tokenFarm).unstake(msg.sender);
+
+            totalsupply = totalsupply.sub(_amount);
+            balances[msg.sender] = balances[msg.sender].sub(_amount);
 
             IERC20(smelt).safeTransfer(msg.sender, _amount);
 
