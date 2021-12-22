@@ -799,15 +799,15 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     function boostDeposit(uint256 _amount) notHalted nonReentrant external {
         require(_amount > 0, "cannot stake 0");
 
-        IERC20(smelt).safeTransferFrom(msg.sender,address(this), _amount);
-
-        totalsupply = totalsupply.add(_amount);
-        balances[msg.sender] = balances[msg.sender].add(_amount);
         //update token mine
         ITokenFarmSC(tokenFarm).stake(msg.sender);
 
-        emit BoostDeposit(msg.sender,_amount);
+        IERC20(smelt).safeTransferFrom(msg.sender,address(this), _amount);
 
+        totalsupply = totalsupply.add(_amount);
+        balances[msg.sender] = balances[msg.sender].add(_amount);   
+
+        emit BoostDeposit(msg.sender,_amount);
     }
 
     function boostwithdraw( uint256 _amount) notHalted nonReentrant external{
