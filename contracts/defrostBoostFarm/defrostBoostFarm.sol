@@ -792,6 +792,8 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     function boostDeposit(uint256 _pid,uint256 _amount) external {
 
+        require(block.timestamp>pool.bonusStartTime,"not reach start time for farming");
+
         withdraw(_pid,0);
 
         ITokenFarmSC(tokenFarm).getReward(msg.sender);
