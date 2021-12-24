@@ -565,10 +565,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         updatePool(_pid);
 
         uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
-
-        if(pending > 0) {
-            mintUserRewardAndTeamReward(_pid,msg.sender,pending);
-        }
+        mintUserRewardAndTeamReward(_pid,msg.sender,pending);
 
         if(_amount > 0) {
             user.amount = user.amount.sub(_amount);
