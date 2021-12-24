@@ -562,6 +562,9 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         withDrawLPFromExt(_pid,_amount);
 
+        //withdraw h2o to user
+        ITokenFarmSC(tokenFarm).getReward(msg.sender);
+
         updatePool(_pid);
 
         uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
@@ -800,8 +803,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         withdraw(_pid,0);
 
-        ITokenFarmSC(tokenFarm).getReward(msg.sender);
-
         IERC20(smelt).safeTransferFrom(msg.sender,address(this), _amount);
 
         totalsupply = totalsupply.add(_amount);
@@ -813,8 +814,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     function boostwithdraw(uint256 _pid,uint256 _amount) external{
 
         withdraw(_pid,0);
-
-        ITokenFarmSC(tokenFarm).getReward(msg.sender);
 
         totalsupply = totalsupply.sub(_amount);
         balances[msg.sender] = balances[msg.sender].sub(_amount);
