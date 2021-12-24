@@ -24,7 +24,7 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
     }
 
     /**
-     * @dev constructor function. set phx minePool contract address. 
+     * @dev constructor function. set minePool contract address.
      */ 
     function setParameter(address _meltAddress,uint256 _timeSpan,uint256 _dispatchTimes,uint256 _txNum,uint256 _idxperiod) OwnerOrOrigin public{
         if (_meltAddress != address(0))
@@ -110,22 +110,19 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
         //get current claimable balance for account
         uint256 claimable = getClaimAbleBalance(account);
         if(claimable>0) {
-            claimphxExpired(account);
+            claimpExpired(account);
         }
 
         emit Input(msg.sender,account,amount,divAmount);
     }
 
 
-//    function claimphxExpiredReward() external inited {
-//        claimphxExpired(msg.sender);
-//    }
 
       /**
      * @dev user user claim expired reward
      */ 
-    function claimphxExpired(address account) internal inited {
-        require(meltAddress !=address(0),"phx token should be set");
+    function claimpExpired(address account) internal inited {
+        require(meltAddress !=address(0),"token should be set");
         
         uint256 txcnt = 0;
         uint256 idx = lockedIndexs[account].beginIdx;
@@ -134,7 +131,7 @@ contract tokenRelease is tokenReleaseData,proxyOwner {
 
         uint256 pretxid = 0;
         for(;idx<endIdx && txcnt<txNum;idx++) {
-           //i used for the user input cphx tx idx,too much i used before,no changed now
+           //i used for the user input  tx idx,too much i used before,no changed now
            uint256 i = userTxIdxs[account][idx];
            if(i!=pretxid){
                 pretxid = i;

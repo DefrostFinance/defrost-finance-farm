@@ -63,6 +63,11 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     event BoostDeposit(address indexed user,  uint256 amount);
     event BoostWithdraw(address indexed user, uint256 amount);
 
+    modifier notZeroAddress(address inputAddress) {
+        require(inputAddress != address(0), "input zero address");
+        _;
+    }
+
     constructor(address _multiSignature,address _origin0,address _origin1)
         proxyOwner(_multiSignature,_origin0,_origin1)
         public
@@ -608,7 +613,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         uint256 length = poolInfo.length;
         for (uint256 pid = 0; pid < length; ++pid) {
             PoolInfo storage pool = poolInfo[pid];
-            require(block.number > pool.bonusEndBlock, "quitPhx block.number <= pid.bonusEndBlock");
+            require(block.number > pool.bonusEndBlock, "quit block.number <= pid.bonusEndBlock");
             updatePool(pid);
             uint256 reward = pool.currentSupply.mul(pool.accRewardPerShare).div(1e12).sub(pool.totalDebtReward);
             rewardTokenBal = rewardTokenBal.sub(reward);
@@ -648,14 +653,14 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
                                 address _tokenFarm,
                                 address _smelt)
         public onlyOrigin
+        notZeroAddress(_rewardToken)
+        notZeroAddress(_oracle)
+        notZeroAddress(_h2o)
+        notZeroAddress(_teamRewardSc)
+        notZeroAddress(_releaseSc)
+        notZeroAddress(_tokenFarm)
+        notZeroAddress(_smelt)
     {
-        require(_rewardToken!=address(0),"_rewardToken address is 0");
-        require(_oracle!=address(0),"_rewardToken address is 0");
-        require(_teamRewardSc!=address(0),"_rewardToken address is 0");
-        require(_releaseSc!=address(0),"_rewardToken address is 0");
-
-        require(_tokenFarm!=address(0),"_tokenFarm address is 0");
-        require(_smelt!=address(0),"_smelt address is 0");
 
         rewardToken = _rewardToken;
         oracle = _oracle;
