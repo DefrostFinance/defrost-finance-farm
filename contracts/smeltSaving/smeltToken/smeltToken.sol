@@ -20,20 +20,17 @@ contract smeltToken is IERC20,Ownable{
     string private name_;
     string private symbol_;
     uint8  private decimals_;
-    bool   public  enableFarm;
-    address public farm;
+
 
     constructor(string memory tokenName,
                 string memory tokenSymbol,
-                uint256 tokenDecimal,
-                address _farm
+                uint256 tokenDecimal
               )
         public
     {
         name_ = tokenName;
         symbol_ = tokenSymbol;
         decimals_ = uint8(tokenDecimal);
-        farm = _farm;
     }
 
 
@@ -58,15 +55,8 @@ contract smeltToken is IERC20,Ownable{
         return decimals_;
     }
 
-    function setFarmFlag(bool flag) external onlyOwner{
-        enableFarm = flag;
-    }
 
     function mint(address usr, uint256 amount) external onlyOwner{
-        //fix bug,updated before balance change
-        if(enableFarm) {
-            IFARM(farm).update(usr);
-        }
        _mint(usr,amount);
     }
     /*
@@ -75,11 +65,6 @@ contract smeltToken is IERC20,Ownable{
     * @param amount The amount of coins to burn
     */
     function burn(address usr, uint256 amount) external onlyOwner{
-        //fix bug,updated before balance change
-        if(enableFarm) {
-            IFARM(farm).update(usr);
-        }
-
        _burn(usr,amount);
     }
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -116,11 +101,6 @@ contract smeltToken is IERC20,Ownable{
     * @param value The amount to be transferred.
     */
     function transfer(address to, uint256 value) public returns (bool) {
-        //fix bug,updated before balance change
-        if(enableFarm) {
-            IFARM(farm).update(msg.sender);
-            IFARM(farm).update(to);
-        }
         _transfer(msg.sender, to, value);
         return true;
     }
@@ -151,15 +131,8 @@ contract smeltToken is IERC20,Ownable{
      * @param value uint256 the amount of tokens to be transferred
      */
     function transferFrom(address from, address to, uint256 value) public returns (bool) {
-        //fix bug,updated before balance change
-        if(enableFarm) {
-            IFARM(farm).update(from);
-            IFARM(farm).update(to);
-        }
-
         _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
         _transfer(from, to, value);
-
 
         emit Approval(from, msg.sender, _allowed[from][msg.sender]);
         return true;
