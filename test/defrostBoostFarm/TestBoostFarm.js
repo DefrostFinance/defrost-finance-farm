@@ -351,6 +351,7 @@ contract('Boost farm Test', function (accounts){
         let afterBal = await lp.balanceOf(farmproxyinst.address);
         console.log("afterbalance=",afterBal.toString(10));
 
+
         let mineInfo = await farmproxyinst.getMineInfo(0);
         console.log(mineInfo[0].toString(10),mineInfo[1].toString(10),
             mineInfo[2].toString(10),mineInfo[3].toString(10));
@@ -525,11 +526,40 @@ contract('Boost farm Test', function (accounts){
             assert.equal(res, true, "should return true");
             utils.sleep(2000);
             time.increase(3600*24);
+
+            let getBoostPendingReward = await farmproxyinst.boostPendingReward(staker1);
+            console.log("boost staker1 reward",web3.utils.fromWei(getBoostPendingReward));
+
+            getBoostPendingReward = await farmproxyinst.boostPendingReward(staker2);
+            console.log("boost staker1 reward",web3.utils.fromWei(getBoostPendingReward));
+        }
+        {//deposit again after boost start
+
+            utils.sleep(1000);
+            let preBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
+            res = await farmproxyinst.deposit(0, VAL_10M, {from: staker1});
+            assert.equal(res.receipt.status, true);
+            let afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
+            console.log("staker1 deposit h2o reward=" + (afterBalance - preBalance));
+
+
+            utils.sleep(1000);
+            lpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
+            res = await farmproxyinst.deposit(0, VAL_10M, {from: staker2});
+            assert.equal(res.receipt.status, true);
+            afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
+            console.log("staker2 deposit h2o reward=" + (afterBalance - preBalance));
+
+            utils.sleep(1000);
+            lpreBalance = web3.utils.fromWei(await h2o.balanceOf(staker3));
+            res = await farmproxyinst.deposit(0, VAL_10M, {from: staker3});
+            assert.equal(res.receipt.status, true);
+            afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker3));
+            console.log("staker2 deposit h2o reward=" + (afterBalance - preBalance));
         }
 
-
 /////////////////////////////////////////////////////////////////////////////////
-
+        time.increase(3600*24);
         let preBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
 
         res = await farmproxyinst.boostwithdraw(0,0,{from:staker1});
