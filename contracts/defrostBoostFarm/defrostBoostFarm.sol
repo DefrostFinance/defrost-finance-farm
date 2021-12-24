@@ -646,7 +646,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function setDefrostAddress( address _rewardToken,
-                                address _oracle,
                                 address _h2o,
                                 address _teamRewardSc,
                                 address _releaseSc,
@@ -654,7 +653,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
                                 address _smelt)
         public onlyOrigin
         notZeroAddress(_rewardToken)
-        notZeroAddress(_oracle)
         notZeroAddress(_h2o)
         notZeroAddress(_teamRewardSc)
         notZeroAddress(_releaseSc)
@@ -663,7 +661,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     {
 
         rewardToken = _rewardToken;
-        oracle = _oracle;
         h2o = _h2o;
         teamRewardSc = _teamRewardSc;
         releaseSc = _releaseSc;

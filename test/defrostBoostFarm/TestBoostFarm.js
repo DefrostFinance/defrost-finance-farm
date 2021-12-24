@@ -273,7 +273,6 @@ contract('Boost farm Test', function (accounts){
 ///////////////////////////////////////////////////////////////////////////////
    {
             let msgData = farmproxyinst.contract.methods.setDefrostAddress( melt.address,
-                                                                            oracleinst.address,
                                                                             h2o.address,
                                                                             teamReward.address,
                                                                             tokenReleaseInt.address,
@@ -294,7 +293,6 @@ contract('Boost farm Test', function (accounts){
 
             res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved", async function () {
                 await farmproxyinst.setDefrostAddress(  melt.address,
-                                                        oracleinst.address,
                                                         h2o.address,
                                                         teamReward.address,
                                                         tokenReleaseInt.address,
@@ -432,6 +430,9 @@ contract('Boost farm Test', function (accounts){
             console.log("png reward=" + (pngpafterBalance - pngpreBalance));
             console.log("====================================================================================")
 
+            utils.sleep(2000);
+            time.increase(3600);
+
     })
 
 
@@ -451,15 +452,15 @@ contract('Boost farm Test', function (accounts){
 //////////////////////////////////////////////////////////////////////////////////
         let preBal = await lp.balanceOf(farmproxyinst.address);
         console.log("prebalance=",preBal.toString(10));
-        res = await farmproxyinst.boostDeposit(BOOST_499,{from:staker1});
+        res = await farmproxyinst.boostDeposit(0,BOOST_499,{from:staker1});
         assert.equal(res.receipt.status,true);
 
         utils.sleep(1000);
-        res = await farmproxyinst.boostDeposit(BOOST_1000,{from:staker2});
+        res = await farmproxyinst.boostDeposit(0,BOOST_1000,{from:staker2});
         assert.equal(res.receipt.status,true);
 
         utils.sleep(1000);
-        res = await farmproxyinst.boostDeposit(VAL_10M,{from:staker3});
+        res = await farmproxyinst.boostDeposit(0,VAL_10M,{from:staker3});
         assert.equal(res.receipt.status,true);
 
         let afterBal = await lp.balanceOf(farmproxyinst.address);
@@ -531,7 +532,7 @@ contract('Boost farm Test', function (accounts){
 
         let preBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
 
-        res = await farmproxyinst.boostwithdraw(0,{from:staker1});
+        res = await farmproxyinst.boostwithdraw(0,0,{from:staker1});
         assert.equal(res.receipt.status,true);
 
         let afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
@@ -540,7 +541,7 @@ contract('Boost farm Test', function (accounts){
 //////////////////////////////////////////////////////////////////////////////
         preBalance = web3.utils.fromWei(await h2o.balanceOf(staker2));
 
-        res = await farmproxyinst.boostwithdraw(0,{from:staker2});
+        res = await farmproxyinst.boostwithdraw(0,0,{from:staker2});
         assert.equal(res.receipt.status,true);
 
         afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker2))
@@ -549,7 +550,7 @@ contract('Boost farm Test', function (accounts){
 /////////////////////////////////////////////////////////////////////////////////////////
         preBalance = web3.utils.fromWei(await h2o.balanceOf(staker3));
 
-        res = await farmproxyinst.boostwithdraw(0,{from:staker3});
+        res = await farmproxyinst.boostwithdraw(0,0,{from:staker3});
         assert.equal(res.receipt.status,true);
 
         afterBalance = web3.utils.fromWei(await h2o.balanceOf(staker3));
@@ -559,10 +560,10 @@ contract('Boost farm Test', function (accounts){
     })
 
     it("[0050] check stakers withdraw boost stake,should pass", async()=>{
-
+        utils.sleep(2000);
         let preBalance = web3.utils.fromWei(await smelt.balanceOf(staker1));
         let stakedBal = await farmproxyinst.boostStakedFor(staker1);
-        res = await farmproxyinst.boostwithdraw(stakedBal,{from:staker1});
+        res = await farmproxyinst.boostwithdraw(0,stakedBal,{from:staker1});
         assert.equal(res.receipt.status,true);
 
         let afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker1));
@@ -571,7 +572,7 @@ contract('Boost farm Test', function (accounts){
 //////////////////////////////////////////////////////////////////////////////
         preBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
         stakedBal = await farmproxyinst.boostStakedFor(staker2);
-        res = await farmproxyinst.boostwithdraw(stakedBal,{from:staker2});
+        res = await farmproxyinst.boostwithdraw(0,stakedBal,{from:staker2});
         assert.equal(res.receipt.status,true);
 
         afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
@@ -581,7 +582,7 @@ contract('Boost farm Test', function (accounts){
 /////////////////////////////////////////////////////////////////////////////////////////
         preBalance = web3.utils.fromWei(await smelt.balanceOf(staker3));
         stakedBal = await farmproxyinst.boostStakedFor(staker3);
-        res = await farmproxyinst.boostwithdraw(stakedBal,{from:staker3});
+        res = await farmproxyinst.boostwithdraw(0,stakedBal,{from:staker3});
         assert.equal(res.receipt.status,true);
 
         afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker3));
