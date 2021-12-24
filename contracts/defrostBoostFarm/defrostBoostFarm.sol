@@ -779,7 +779,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         return (depositAmount,claimable,locked,claimed,joeReward);
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep)
+    function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep,uint256 _MaxFactor)
         external
         onlyOrigin
     {
@@ -788,6 +788,8 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         RatioIncreaseStep = _RatioIncreaseStep;// 1%
         BoostTokenAmountStepAmount = _BoostTokenAmountStepAmount;
+
+        MaxFactor = _MaxFactor;
     }
 
     function boostDeposit(uint256 _pid,uint256 _amount) external {
@@ -828,8 +830,14 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         if(_amount<BaseBoostTokenAmount) {
             return RATIO_DENOM;
         } else {
-            uint256 ratio = (_amount.sub(BaseBoostTokenAmount).div(BoostTokenAmountStepAmount)).mul(RatioIncreaseStep);//no decimal,just integer multiple
-            return RATIO_DENOM.add(BaseIncreaseRatio).add(ratio);
+            uint256 factor = (_amount.sub(BaseBoostTokenAmount).div(BoostTokenAmountStepAmount)).mul(RatioIncreaseStep);//no decimal,just integer multiple
+            factor = RATIO_DENOM.add(BaseIncreaseRatio).add(factor);
+
+            if(factor > MaxFactor) {
+                factor = MaxFactor;
+            }
+
+            return factor;
         }
     }
 

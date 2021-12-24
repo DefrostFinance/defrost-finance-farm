@@ -125,8 +125,10 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
 
     uint256 public RatioIncreaseStep = 10;// 1%
     uint256 public BoostTokenAmountStepAmount = 1000 ether;
+    uint256 public MaxFactor = 5500;//5.5 multiple
 
-    address public smelt;
+
+address public smelt;
     uint256 internal totalsupply;
     mapping(address => uint256) internal balances;
 
