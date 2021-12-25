@@ -4,11 +4,6 @@ import '../../modules/IERC20.sol';
 import '../../modules/SafeMath.sol';
 import '../../modules/Ownable.sol';
 
-
-interface IFARM {
-    function update(address account) external;
-}
-
 contract smeltToken is IERC20,Ownable{
 
     using SafeMath for uint256;
