@@ -2,9 +2,8 @@ pragma solidity ^0.5.16;
 
 import '../../modules/IERC20.sol';
 import '../../modules/SafeMath.sol';
-import '../../modules/Ownable.sol';
 
-contract smeltToken is IERC20,Ownable{
+contract smeltToken is IERC20 {
 
     using SafeMath for uint256;
 
@@ -15,17 +14,24 @@ contract smeltToken is IERC20,Ownable{
     string private name_;
     string private symbol_;
     uint8  private decimals_;
+    address public savingPool;
 
+    modifier onlySavingPool() {
+        require(savingPool==msg.sender, "not admin");
+        _;
+    }
 
     constructor(string memory tokenName,
                 string memory tokenSymbol,
-                uint256 tokenDecimal
+                uint256 tokenDecimal,
+                address _savingPool
               )
         public
     {
         name_ = tokenName;
         symbol_ = tokenSymbol;
         decimals_ = uint8(tokenDecimal);
+        savingPool = _savingPool;
     }
 
 
@@ -51,7 +57,7 @@ contract smeltToken is IERC20,Ownable{
     }
 
 
-    function mint(address usr, uint256 amount) external onlyOwner{
+    function mint(address usr, uint256 amount) external onlySavingPool{
        _mint(usr,amount);
     }
     /*
@@ -59,7 +65,7 @@ contract smeltToken is IERC20,Ownable{
     * @param usr The address that will have its coins burned
     * @param amount The amount of coins to burn
     */
-    function burn(address usr, uint256 amount) external onlyOwner{
+    function burn(address usr, uint256 amount) external onlySavingPool{
        _burn(usr,amount);
     }
 ////////////////////////////////////////////////////////////////////////////////////////

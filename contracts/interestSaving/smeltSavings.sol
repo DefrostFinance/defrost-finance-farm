@@ -29,7 +29,7 @@ contract smeltSavings is smeltSavingsData,proxyOwner{
        public
     {
         melt = _melt;
-        smelt = new smeltToken("Defrost Finance Smelt Token","SMELT",18);
+        smelt = new smeltToken("Defrost Finance Smelt Token","SMELT",18,address(this));
     }
 
     function () external payable{
