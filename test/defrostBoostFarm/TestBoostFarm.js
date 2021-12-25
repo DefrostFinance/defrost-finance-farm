@@ -63,7 +63,7 @@ contract('Boost farm Test', function (accounts){
     let BOOST_1000 = web3.utils.toWei('1000', 'ether');
     let BOOST_3001 = web3.utils.toWei('3001', 'ether');
     let BOOST_9999 = web3.utils.toWei('9999', 'ether');
-    let BOOST_10001 = web3.utils.toWei('10001', 'ether');
+    let BOOST_100001 = web3.utils.toWei('100001', 'ether');
 
     let minutes = 60;
     let hour    = 60*60;
@@ -143,8 +143,6 @@ contract('Boost farm Test', function (accounts){
         await melt.mint(accounts[0],VAL_1B);
 
         smelt = await Smelt.new("melt token","melt",18,accounts[0]);
-        //mock disable h2o mine
-        await smelt.setFarmFlag(false);
 
         await smelt.mint(staker1,VAL_1B);
         await smelt.mint(staker2,VAL_1B);
@@ -438,38 +436,44 @@ contract('Boost farm Test', function (accounts){
 
 
     it("[0030] stake in boost smelt,should pass", async()=>{
+        console.log("=======================begin boost===========================")
         let staker1BoostFactor = await farmproxyinst.getUserBoostFactor(BOOST_499);
         console.log("staker 1 boost factor",staker1BoostFactor.toString(10));
 
-        let staker2BoostFactor = await farmproxyinst.getUserBoostFactor(BOOST_1000);
+        let staker2BoostFactor = await farmproxyinst.getUserBoostFactor(BOOST_3001);
         console.log("staker 2 boost factor",staker2BoostFactor.toString(10));
 
-        let staker3BoostFactor = await farmproxyinst.getUserBoostFactor(BOOST_10001);
+        let staker3BoostFactor = await farmproxyinst.getUserBoostFactor(BOOST_100001);
         console.log("staker 3 boost factor",staker3BoostFactor.toString(10));
 
         let getBoostMineInfo = await farmproxyinst.getBoostMineInfo();
         console.log("boost mine info",getBoostMineInfo[0].toString(10),getBoostMineInfo[1].toString(10));
 
 //////////////////////////////////////////////////////////////////////////////////
-        let preBal = await lp.balanceOf(farmproxyinst.address);
-        console.log("prebalance=",preBal.toString(10));
+        let preBal = await smelt.balanceOf(farmproxyinst.address);
+        console.log("smelt prebalance=",preBal.toString(10));
         res = await farmproxyinst.boostDeposit(0,BOOST_499,{from:staker1});
         assert.equal(res.receipt.status,true);
+        //utils.sleep(1000);
 
-        utils.sleep(1000);
-        res = await farmproxyinst.boostDeposit(0,BOOST_1000,{from:staker2});
+
+        res = await farmproxyinst.boostDeposit(0,BOOST_3001,{from:staker2});
         assert.equal(res.receipt.status,true);
 
-        utils.sleep(1000);
+        //utils.sleep(1000);
         res = await farmproxyinst.boostDeposit(0,VAL_10M,{from:staker3});
         assert.equal(res.receipt.status,true);
 
-        let afterBal = await lp.balanceOf(farmproxyinst.address);
-        console.log("afterbalance=",afterBal.toString(10));
+        let afterBal = await smelt.balanceOf(farmproxyinst.address);
+        console.log("smelt afterbalance=",afterBal.toString(10));
 
 /////////////////////////////////////////////////////////////////////////////////////////
-        time.increase(3600*24);
+        //time.increase(3600*24);
+        utils.sleep(10000);
         let rewardInfo = await farmproxyinst.getRewardInfo(0,staker1);
+        let boostBal = await farmproxyinst.balanceOf(staker1);
+        console.log("staker1 boost balance",web3.utils.fromWei(boostBal));
+
         console.log("staker1 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
         console.log("staker1 claimable",web3.utils.fromWei(rewardInfo[1]));
         console.log("staker1 locked",web3.utils.fromWei(rewardInfo[2]));
@@ -477,8 +481,10 @@ contract('Boost farm Test', function (accounts){
         console.log("staker1 extern reward",web3.utils.fromWei(rewardInfo[4]));
         let getBoostPendingReward = await farmproxyinst.boostPendingReward(staker1);
         console.log("boost staker1 reward",web3.utils.fromWei(getBoostPendingReward));
-
+        console.log("-----------------------------------------------------------------");
         rewardInfo = await farmproxyinst.getRewardInfo(0,staker2);
+        boostBal = await farmproxyinst.balanceOf(staker2);
+        console.log("staker2 boost balance",web3.utils.fromWei(boostBal));
         console.log("staker2 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
         console.log("staker2 claimable",web3.utils.fromWei(rewardInfo[1]));
         console.log("staker2 locked",web3.utils.fromWei(rewardInfo[2]));
@@ -486,8 +492,10 @@ contract('Boost farm Test', function (accounts){
         console.log("staker2 extern reward",web3.utils.fromWei(rewardInfo[4]));
         getBoostPendingReward = await farmproxyinst.boostPendingReward(staker2);
         console.log("boost staker2 reward",web3.utils.fromWei(getBoostPendingReward));
-
+        console.log("-----------------------------------------------------------------");
         rewardInfo = await farmproxyinst.getRewardInfo(0,staker3);
+        boostBal = await farmproxyinst.balanceOf(staker3);
+        console.log("staker3 boost balance",web3.utils.fromWei(boostBal));
         console.log("staker3 depositAmount",web3.utils.fromWei(rewardInfo[0]))  ;
         console.log("staker3 claimable",web3.utils.fromWei(rewardInfo[1]));
         console.log("staker3 locked",web3.utils.fromWei(rewardInfo[2]));

@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "@openzeppelin/test-helpers": "^0.5.13",
-    "bn.js": "^5.1.2",
     "chai": "^4.3.4",
-    "web3": "^1.2.11"
+    "web3": "^1.2.11",
+    "bignumber":"^1.1.0"
   },
   "devDependencies": {
     "eth-gas-reporter": "^0.2.17",

@@ -730,9 +730,9 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         uint256 userRward = _reward.mul(userIncRatio).div(RATIO_DENOM);
 
-        //boost user balance;
+        //boost user balance,factor decimal is 1e27
         uint256 userBoostFactor = getUserBoostFactor(balances[_user]);
-        userRward = userRward.mul(userBoostFactor).div(RATIO_DENOM);
+        userRward = userRward.mul(userBoostFactor).div(rayDecimals);
 
         //get team reward
         uint256 teamReward = userRward.mul(fixedTeamRatio).div(RATIO_DENOM);
@@ -782,15 +782,15 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         return (depositAmount,claimable,locked,claimed,joeReward);
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenAmountStepAmount,uint256 _RatioIncreaseStep,uint256 _MaxFactor)
+    function setBoostFarmFactorPara(uint256 _BaseBoostTokenAmount,uint256 _BaseIncreaseRatio,uint256 _BoostTokenStepAmount,uint256 _RatioIncreaseStep,uint256 _MaxFactor)
         external
         onlyOrigin
     {
-        BaseBoostTokenAmount = _BaseBoostTokenAmount;
-        BaseIncreaseRatio = _BaseIncreaseRatio; //3%
+        BaseBoostTokenAmount = _BaseBoostTokenAmount; //default 1000 ether
+        BaseIncreaseRatio = _BaseIncreaseRatio; //default 3%
 
-        RatioIncreaseStep = _RatioIncreaseStep;// 1%
-        BoostTokenAmountStepAmount = _BoostTokenAmountStepAmount;
+        RatioIncreaseStep = _RatioIncreaseStep;//default 1%
+        BoostTokenStepAmount = _BoostTokenStepAmount; //default 1000 ether
 
         MaxFactor = _MaxFactor;
     }
@@ -823,14 +823,16 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     }
 
     function getUserBoostFactor(uint256 _amount)
-        public view returns(uint256)
+       public view returns(uint256)
     {
 
         if(_amount<BaseBoostTokenAmount) {
-            return RATIO_DENOM;
+            return rayDecimals;
         } else {
-            uint256 factor = (_amount.sub(BaseBoostTokenAmount).div(BoostTokenAmountStepAmount)).mul(RatioIncreaseStep);//no decimal,just integer multiple
-            factor = RATIO_DENOM.add(BaseIncreaseRatio).add(factor);
+
+            //amount(wei)*(increase step)/per wei
+            uint256 factor = _amount.sub(BaseBoostTokenAmount).mul(RatioIncreaseStep).div(BoostTokenStepAmount);
+            factor = rayDecimals.add(factor);
 
             if(factor > MaxFactor) {
                 factor = MaxFactor;

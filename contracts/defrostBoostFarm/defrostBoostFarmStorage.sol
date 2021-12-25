@@ -120,12 +120,15 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     PoolInfo[] poolInfo;   // Info of each pool.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    uint256 public BaseBoostTokenAmount = 1000 ether;
-    uint256 public BaseIncreaseRatio = 30; //3%
+    uint256 constant internal rayDecimals = 1e27;//100%
 
-    uint256 public RatioIncreaseStep = 10;// 1%
-    uint256 public BoostTokenAmountStepAmount = 1000 ether;
-    uint256 public MaxFactor = 5500;//5.5 multiple
+    uint256 public BaseBoostTokenAmount = 1e21;//1000 ether;
+    uint256 public BaseIncreaseRatio = 3e25; //3%
+
+    uint256 public RatioIncreaseStep = 1e25;// 1%
+    uint256 public BoostTokenStepAmount = 1e21;//1000 ether;
+
+    uint256 public MaxFactor = 55e26;//5.5 multiple
 
 
     address public smelt;

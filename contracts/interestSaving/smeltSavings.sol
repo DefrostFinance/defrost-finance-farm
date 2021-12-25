@@ -91,6 +91,11 @@ contract smeltSavings is smeltSavingsData,proxyOwner{
         return _smeltAmount.mul(newRate).div(rayDecimals);
     }
 
+    function getSmeltAmount(uint256 _meltAmount) public view returns (uint256) {
+        uint256 newRate = newAccumulatedRate();
+        return _meltAmount.mul(rayDecimals)/newRate;
+    }
+
     function deposit(uint256 _amount)
         external
         nonReentrant
