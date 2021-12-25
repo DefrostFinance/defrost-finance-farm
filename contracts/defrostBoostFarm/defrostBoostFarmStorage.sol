@@ -106,9 +106,10 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
 
     address public rewardToken;
     address public h2o;
-    uint256 public fixedTeamRatio = 10;
-    uint256 public fixedWhitelistRatio = 100;
-    uint256 public whiteListfloorLimit;
+    uint256 public fixedTeamRatio = 80;  //default 8%
+
+    uint256 public fixedWhitelistRatio = 200;  //default 20%
+    uint256 public whiteListfloorLimit = 500000 ether; //default 500 thousands
 
     address public teamRewardSc;
     address public releaseSc;
