@@ -166,7 +166,7 @@ contract smeltSavings is smeltSavingsData,proxyOwner{
        return getMeltAmount(smelt.totalSupply());
     }
 
-    function getbackLeftMiningToken(address _reciever)  public
+    function getbackLeftMiningToken(address _reciever)  external
         onlyOrigin
     {
 
