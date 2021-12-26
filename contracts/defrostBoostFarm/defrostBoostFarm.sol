@@ -832,7 +832,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
             //amount(wei)*(increase step)/per wei
             uint256 factor = _amount.sub(BaseBoostTokenAmount).mul(RatioIncreaseStep).div(BoostTokenStepAmount);
-            factor = rayDecimals.add(factor);
+            factor = BaseIncreaseRatio.add(factor);
 
             if(factor > MaxFactor) {
                 factor = MaxFactor;
