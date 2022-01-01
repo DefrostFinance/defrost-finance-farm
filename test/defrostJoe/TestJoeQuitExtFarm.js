@@ -94,14 +94,14 @@ contract('MinePoolProxy', function (accounts){
         //         IRewarder _rewarder
         // ) public onlyOwner {
 
-        let res = await joeFarmChefInst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
+        let res = await joeFarmChefV2Inst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
         assert.equal(res.receipt.status,true);
 
     }
 
     async function enablePngDoubleFarm(){
 
-        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefInst.address,0,{from:operator1});
+        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefV2Inst.address,0,{from:operator1});
         assert.equal(res.receipt.status,true);
 
         res = await farmproxyinst.enableDoubleFarming(0,true,{from:operator1});
@@ -281,7 +281,7 @@ contract('MinePoolProxy', function (accounts){
 
 
         console.log("set farmsc as admin to enable mint melt");
-        let msgData = farmproxyinst.contract.methods.quitExtFarm(joeFarmChefInst.address,accounts[6]).encodeABI();
+        let msgData = farmproxyinst.contract.methods.quitExtFarm(joeFarmChefV2Inst.address,accounts[6]).encodeABI();
         let hash = await utils.createApplication(mulSiginst,accounts[9],farmproxyinst.address,0,msgData);
 
         let index = await mulSiginst.getApplicationCount(hash)
@@ -295,7 +295,7 @@ contract('MinePoolProxy', function (accounts){
         assert.equal(res.receipt.status,true);
 
         res = await utils.testSigViolation("multiSig emergencyWithdrawExtLp: This tx is aprroved",async function(){
-            await farmproxyinst.quitExtFarm(joeFarmChefInst.address,accounts[6],{from:accounts[9]});
+            await farmproxyinst.quitExtFarm(joeFarmChefV2Inst.address,accounts[6],{from:accounts[9]});
         });
         assert.equal(res,true,"should return true");
 

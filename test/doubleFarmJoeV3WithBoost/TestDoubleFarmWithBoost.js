@@ -15,11 +15,12 @@ const TeamDistribute = artifacts.require('TeamDistribute');
 const MeltToken = artifacts.require("LpToken");
 const MultiSignature = artifacts.require("multiSignature");
 
-const JoeFarmChef = artifacts.require("MasterChefJoeV2");
+const JoeFarmChefV3 = artifacts.require("MasterChefJoeV3");
+const JoeFarmChefV2 = artifacts.require("MasterChefJoeV2");
 const JoeToken = artifacts.require('MockToken');
 
-const DefrostFarm = artifacts.require("DefrostFarm");
-const BoostTokenFarm = artifacts.require("BoostTokenFarm");
+const DefrostFarm = artifacts.require("DefrostBoostFarmV3");
+const BoostTokenFarm = artifacts.require("BoostTokenFarmV3");
 
 const assert = require('chai').assert;
 const Web3 = require('web3');
@@ -87,30 +88,78 @@ contract('Boost farm Test', function (accounts){
 
     let tokenReleaseInt;
 
+    let joeToken;
+    let joeFarmChefV3Inst;
+    let joeFarmChefV2Inst;
 
-    // let joeFarmChefV2Inst;
-    // let joeToken;
-    async function initPngDoubleFarm(){
+    async function initDoubleFarm(){
 
         joeToken = await JoeToken.new("Joe token","joe",18);
+        dummyToken = await JoeToken.new("dummy token","joe",18);
 
-        joeFarmChefV2Inst = await JoeFarmChef.new(joeToken.address,accounts[7],accounts[8],accounts[9],web3.utils.toWei("1",'ether'),startTime,0,0,0);
+        dummyToken.mint(accounts[0],web3.utils.toWei("10000",'ether'));
+        joeFarmChefV2Inst = await JoeFarmChefV2.new(joeToken.address,accounts[7],accounts[8],accounts[9],web3.utils.toWei("1",'ether'),startTime,0,0,0);
+        let res = await joeFarmChefV2Inst.add(100,dummyToken.address,"0x0000000000000000000000000000000000000000");
 
 
-        let res = await joeFarmChefV2Inst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
+        joeFarmChefV3Inst = await JoeFarmChefV3.new(joeFarmChefV2Inst.address,joeToken.address,0);
+        await dummyToken.approve(joeFarmChefV3Inst.address,web3.utils.toWei("100000",'ether'),{from: accounts[0]});
+        await joeFarmChefV3Inst.init(dummyToken.address);
+
+        res = await joeFarmChefV3Inst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
         assert.equal(res.receipt.status,true);
-
     }
 
-    async function enablePngDoubleFarm(){
 
-        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefV2Inst.address,0);
-        assert.equal(res.receipt.status,true);
+    async function enableDoubleFarm(){
+        {
+            let msgData = farmproxyinst.contract.methods.setDoubleFarming(0,joeFarmChefV3Inst.address,0).encodeABI();
 
-        res = await farmproxyinst.enableDoubleFarming(0,true);
-        assert.equal(res.receipt.status,true);
+            let hash = await utils.createApplication(mulSiginst, accounts[8], farmproxyinst.address, 0, msgData);
+
+            let index = await mulSiginst.getApplicationCount(hash);
+            index = index.toNumber() - 1;
+            console.log(index);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            assert.equal(res.receipt.status, true);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[8]})
+            assert.equal(res.receipt.status, true);
+
+            res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved", async function () {
+                await farmproxyinst.setDoubleFarming(0,joeFarmChefV3Inst.address,0,{from:accounts[8]});
+            });
+
+            assert.equal(res, true);
+        }
+
+        {
+            let msgData = farmproxyinst.contract.methods.enableDoubleFarming(0,true).encodeABI();
+
+            let hash = await utils.createApplication(mulSiginst, accounts[8], farmproxyinst.address, 0, msgData);
+
+            let index = await mulSiginst.getApplicationCount(hash);
+            index = index.toNumber() - 1;
+            console.log(index);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            assert.equal(res.receipt.status, true);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[8]})
+            assert.equal(res.receipt.status, true);
+
+            res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved", async function () {
+                await farmproxyinst.enableDoubleFarming(0,true,{from:accounts[8]});
+            });
+
+            assert.equal(res, true);
+        }
+
         console.log("setting end")
+
     }
+
 
     before("init", async()=>{
         oracleinst = await Oracle.new();
@@ -305,8 +354,12 @@ contract('Boost farm Test', function (accounts){
 
 ///////////////////////test setting/////////////////////////////////////////////////////
         res = await oracleinst.setPrice(usdc.address,100000000);//usdc one dollar
-
         console.log("normall setting end");
+
+        await initDoubleFarm();
+
+        await enableDoubleFarm();
+
     })
 
 

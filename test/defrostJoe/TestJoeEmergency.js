@@ -93,14 +93,14 @@ contract('MinePoolProxy', function (accounts){
         //         IRewarder _rewarder
         // ) public onlyOwner {
 
-        let res = await joeFarmChefInst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
+        let res = await joeFarmChefV2Inst.add(100,lp.address,"0x0000000000000000000000000000000000000000");
         assert.equal(res.receipt.status,true);
 
     }
 
     async function enablePngDoubleFarm(){
 
-        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefInst.address,0,{from:operator1});
+        let res = await farmproxyinst.setDoubleFarming(0,joeFarmChefV2Inst.address,0,{from:operator1});
         assert.equal(res.receipt.status,true);
 
         res = await farmproxyinst.enableDoubleFarming(0,true,{from:operator1});
