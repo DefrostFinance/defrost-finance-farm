@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 import "./defrostBoostFarmStorage.sol";
 import "../modules/IERC20.sol";
 import "../modules/SafeMath.sol";
@@ -32,7 +32,7 @@ interface IChef {
    // function getMultiplier(uint256 _from, uint256 _to) external view returns (uint256);
     function pendingTokens(uint256 _pid, address _user)  external view returns (uint256,address,string memory,uint256);
 
-    function joe() external view returns (address);
+    function JOE() external view returns (address);
     function joePerSec() external view returns (uint256);
 
     function poolInfo(uint256) external  view returns ( address lpToken, uint256 allocPoint, uint256 lastRewardTime, uint256 accJoePerShare);
@@ -141,7 +141,6 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
              ) public onlyOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
-        //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
         require(block.timestamp<_bonusStartTime,"start time is earlier than current time");
         //estimate entime
         uint256 endTime = block.timestamp.add((_bonusEndBlock.sub(block.number)).mul(_secPerBlk));
@@ -149,7 +148,14 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         require(address(_lpToken) != address(0), "_lpToken == 0");
 
-        //uint256 lastRewardBlock = block.number > _bonusStartBlock ? block.number : _bonusStartBlock;
+        bool isExist = false;//check if lp is repeated
+        for(uint256 i=0;i<poolInfo.length;i++) {
+            if(poolInfo[i].lpToken==_lpToken) {
+                isExist = true;
+                break;
+            }
+        }    
+        require(!isExist, "add: LP already added");
 
         ExtFarmInfo memory extFarmInfo = ExtFarmInfo({
                 extFarmAddr:address(0x0),
@@ -275,7 +281,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         uint256 allUnClaimedExtReward = totalUnclaimedExtFarmReward(pool.extFarmInfo.extFarmAddr);
 
-        uint256 extRewardCurrentBalance = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+        uint256 extRewardCurrentBalance = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this));
 
         uint256 maxDistribute = extRewardCurrentBalance.sub(allUnClaimedExtReward);
 
@@ -287,7 +293,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
     function getExtFarmRewardRate(IChef chef,IERC20 lpToken, uint256 extPid) internal view returns(uint256 rate){
 //        uint256 multiplier = chef.getMultiplier(block.number-1, block.number);
 
-        uint256 extRewardPerBlock = chef.joePerSec();
+        uint256 extRewardPerSec = chef.joePerSec();
 
         (,uint256 allocPoint,uint256 lastRewardTimestamp,) = chef.poolInfo(extPid);
         //changed according joe
@@ -295,8 +301,10 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         uint256 totalAllocPoint = chef.totalAllocPoint();
         uint256 totalSupply = lpToken.balanceOf(address(chef));
-
-        rate = multiplier.mul(extRewardPerBlock).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
+		if(totalSupply==0) {
+			return 0;
+		}
+        rate = multiplier.mul(extRewardPerSec).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
     }
 
     function extRewardPerBlock(uint256 _pid) public view returns(uint256) {
@@ -331,12 +339,12 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         require(pool.extFarmInfo.extFarmAddr != address(0x0),"pool not supports double farming yet");
         if(pool.extFarmInfo.extEnableDeposit != enable){
 
-            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this));
 
             if(enable){
                 IERC20(pool.lpToken).approve(pool.extFarmInfo.extFarmAddr,0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
                 if(pool.currentSupply > 0) {
-                    IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid,pool.currentSupply);
+                   IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid,pool.currentSupply);
                 }
 
                 pool.extFarmInfo.extEnableClaim = true;
@@ -350,7 +358,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
             }
 
             if(pool.currentSupply > 0){
-                uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this)).sub(oldJoeRewarad);
+                uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this)).sub(oldJoeRewarad);
 
                 pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
             }
@@ -367,7 +375,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
 
-       // require(pool.extFarmInfo.extFarmAddr == address(0x0),"cannot set extFramAddr again");
+        require(pool.extFarmInfo.extFarmAddr == address(0x0),"cannot set extFramAddr again");
 
         uint256 extPoolLength = IChef(extFarmAddr).poolLength();
         require(_extPid < extPoolLength,"bad _extPid");
@@ -399,7 +407,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
             return 0;
         }
 
-        if(pool.currentSupply <= 0) return 0;
+        if(pool.currentSupply == 0) return 0;
 
         UserInfo storage user = userInfo[_pid][_user];
         if(user.amount <= 0) return 0;
@@ -426,12 +434,12 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
         if(pool.extFarmInfo.extEnableDeposit){
 
-            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this));
             uint256 oldTotalDeposit = pool.currentSupply.sub(_amount);
 
             IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid, _amount);
 
-            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this));
             deltaJoeReward = deltaJoeReward.sub(oldJoeRewarad);
 
             if(oldTotalDeposit > 0 && deltaJoeReward > 0){
@@ -444,7 +452,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
             uint256 transferJoeAmount = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
 
             if(transferJoeAmount > 0){
-                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).joe();
+                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).JOE();
                 IERC20(JoeToken).safeTransfer(msg.sender,transferJoeAmount);
             }
         }
@@ -466,12 +474,12 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
             require(user.amount >= _amount,"withdraw too much lpToken");
 
-            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this));
+            uint256 oldJoeRewarad = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this));
             uint256 oldTotalDeposit = pool.currentSupply;
 
             IChef(pool.extFarmInfo.extFarmAddr).withdraw(pool.extFarmInfo.extPid, _amount);
 
-            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).joe()).balanceOf(address(this)).sub(oldJoeRewarad);
+            uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this)).sub(oldJoeRewarad);
             if(oldTotalDeposit > 0 && deltaJoeReward > 0)
                 pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
 
@@ -481,7 +489,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
             uint256 transferJoeAmount = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
 
             if(transferJoeAmount > 0){
-                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).joe();
+                address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).JOE();
                 IERC20(JoeToken).safeTransfer(msg.sender, transferJoeAmount);
             }
         }
@@ -625,7 +633,7 @@ contract DefrostFarm is defrostBoostFarmStorage,proxyOwner{
 
     function quitExtFarm(address extFarmAddr, address _to) public onlyOrigin {
 
-        IERC20 joeToken = IERC20(IChef(extFarmAddr).joe());
+        IERC20 joeToken = IERC20(IChef(extFarmAddr).JOE());
 
         uint256 joeBalance = joeToken.balanceOf(address(this));
 
