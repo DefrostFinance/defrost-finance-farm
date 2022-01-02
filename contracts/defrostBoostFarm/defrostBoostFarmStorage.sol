@@ -6,44 +6,6 @@ import "../modules/multiSignatureClient.sol";
 import "../modules/Operator.sol";
 import "./boostTokenFarm.sol";
 
-// contract deFrostFarmErrorReporter {
-//     enum Error {
-//         NO_ERROR,
-//         UNAUTHORIZED
-//     }
-
-//     enum FailureInfo {
-//         ACCEPT_ADMIN_PENDING_ADMIN_CHECK,
-//         ACCEPT_PENDING_IMPLEMENTATION_ADDRESS_CHECK,
-//         SET_PENDING_ADMIN_OWNER_CHECK,
-//         SET_PENDING_IMPLEMENTATION_OWNER_CHECK
-//     }
-
-//     /**
-//       * @dev `error` corresponds to enum Error; `info` corresponds to enum FailureInfo, and `detail` is an arbitrary
-//       * contract-specific code that enables us to report opaque error codes from upgradeable contracts.
-//       **/
-//     event Failure(uint error, uint info, uint detail);
-
-//     /**
-//       * @dev use this when reporting a known error from the money market or a non-upgradeable collaborator
-//       */
-//     function fail(Error err, FailureInfo info) internal returns (uint) {
-//         emit Failure(uint(err), uint(info), 0);
-
-//         return uint(err);
-//     }
-
-//     /**
-//       * @dev use this when reporting an opaque error from an upgradeable collaborator contract
-//       */
-//     function failOpaque(Error err, FailureInfo info, uint opaqueError) internal returns (uint) {
-//         emit Failure(uint(err), uint(info), opaqueError);
-
-//         return uint(err);
-//     }
-// }
-
 contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     // Info of each user.
     struct UserInfo {
@@ -67,16 +29,6 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     }
 
     uint256 RATIO_DENOM = 1000;
-    // struct whiteListRewardRatio {
-    //     uint256 amount;
-    //     uint256 incPercent;
-    // }
-
-    // struct teamRewardRatio {
-    //     uint256 amount;
-    //     uint256 percent;
-    // }
-
 
     // Info of each pool.
     struct PoolInfo {
@@ -96,11 +48,6 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
     }
 
 
-   // uint256 teamRewardLevels;
-   // mapping (uint256 => teamRewardRatio) teamRewardInfo;
-
-   // uint256 whiteListRewardIncLevels;
-   // mapping (uint256 => whiteListRewardRatio)  public whiteListRewardIncInfo;
 
     mapping (address => bool) public whiteListLpUserInfo;
 
