@@ -1,4 +1,4 @@
-pragma solidity ^0.5.16;
+pragma solidity 0.5.16;
 import "./defrostBoostFarmStorageV3.sol";
 import "../modules/IERC20.sol";
 import "../modules/SafeMath.sol";
@@ -141,7 +141,6 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
              ) public onlyOrigin {
 
         require(block.number < _bonusEndBlock, "block.number >= bonusEndBlock");
-        //require(_bonusStartBlock < _bonusEndBlock, "_bonusStartBlock >= _bonusEndBlock");
         require(block.timestamp<_bonusStartTime,"start time is earlier than current time");
         //estimate entime
         uint256 endTime = block.timestamp.add((_bonusEndBlock.sub(block.number)).mul(_secPerBlk));
@@ -149,7 +148,14 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
 
         require(address(_lpToken) != address(0), "_lpToken == 0");
 
-        //uint256 lastRewardBlock = block.number > _bonusStartBlock ? block.number : _bonusStartBlock;
+        bool isExist = false;//check if lp is repeated
+        for(uint256 i=0;i<poolInfo.length;i++) {
+            if(poolInfo[i].lpToken==_lpToken) {
+                isExist = true;
+                break;
+            }
+        }    
+        require(!isExist, "add: LP already added");
 
         ExtFarmInfo memory extFarmInfo = ExtFarmInfo({
                 extFarmAddr:address(0x0),
@@ -287,7 +293,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
     function getExtFarmRewardRate(IChef chef,IERC20 lpToken, uint256 extPid) internal view returns(uint256 rate){
 //        uint256 multiplier = chef.getMultiplier(block.number-1, block.number);
 
-        uint256 extRewardPerBlock = chef.joePerSec();
+        uint256 extRewardPerSec = chef.joePerSec();
 
         (,uint256 allocPoint,uint256 lastRewardTimestamp,) = chef.poolInfo(extPid);
         //changed according joe
@@ -295,8 +301,10 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
 
         uint256 totalAllocPoint = chef.totalAllocPoint();
         uint256 totalSupply = lpToken.balanceOf(address(chef));
-
-        rate = multiplier.mul(extRewardPerBlock).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
+		if(totalSupply==0) {
+			return 0;
+		}
+        rate = multiplier.mul(extRewardPerSec).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
     }
 
     function extRewardPerBlock(uint256 _pid) public view returns(uint256) {
@@ -367,7 +375,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
         require(extFarmAddr != address(0x0),"extFarmAddr == 0x0");
         PoolInfo storage pool = poolInfo[_pid];
 
-       // require(pool.extFarmInfo.extFarmAddr == address(0x0),"cannot set extFramAddr again");
+        require(pool.extFarmInfo.extFarmAddr == address(0x0),"cannot set extFramAddr again");
 
         uint256 extPoolLength = IChef(extFarmAddr).poolLength();
         require(_extPid < extPoolLength,"bad _extPid");
@@ -399,7 +407,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
             return 0;
         }
 
-        if(pool.currentSupply <= 0) return 0;
+        if(pool.currentSupply == 0) return 0;
 
         UserInfo storage user = userInfo[_pid][_user];
         if(user.amount <= 0) return 0;
