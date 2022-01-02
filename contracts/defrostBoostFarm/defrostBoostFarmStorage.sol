@@ -99,8 +99,8 @@ contract defrostBoostFarmStorage is Halt, ReentrancyGuard{
    // uint256 teamRewardLevels;
    // mapping (uint256 => teamRewardRatio) teamRewardInfo;
 
-    uint256 whiteListRewardIncLevels;
-    mapping (uint256 => whiteListRewardRatio)  public whiteListRewardIncInfo;
+   // uint256 whiteListRewardIncLevels;
+   // mapping (uint256 => whiteListRewardRatio)  public whiteListRewardIncInfo;
 
     mapping (address => bool) public whiteListLpUserInfo;
 
