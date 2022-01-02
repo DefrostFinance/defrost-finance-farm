@@ -336,7 +336,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
             if(enable){
                 IERC20(pool.lpToken).approve(pool.extFarmInfo.extFarmAddr,0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
                 if(pool.currentSupply > 0) {
-                    IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid,pool.currentSupply);
+                   IChef(pool.extFarmInfo.extFarmAddr).deposit(pool.extFarmInfo.extPid,pool.currentSupply);
                 }
 
                 pool.extFarmInfo.extEnableClaim = true;
