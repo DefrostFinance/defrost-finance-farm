@@ -106,7 +106,7 @@ contract BoostTokenFarm is Halt, BoostTokenFarmData,proxyOwner{
     }
 
     function getReward(address account) public updateReward(account) onlyBoostFarm {
-        uint256 reward = earned(account);
+        uint256 reward = rewards[account];
         if (reward > 0) {
             rewards[account] = 0;
             IERC20(rewardToken).safeTransferFrom(boostFarm,account, reward);
