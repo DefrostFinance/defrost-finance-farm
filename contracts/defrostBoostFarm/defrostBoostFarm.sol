@@ -18,8 +18,6 @@ interface IReleaseSC {
 }
 
 interface ITokenFarmSC {
-    function stake(address account) external;
-    function unstake(address account) external;
     function getReward(address account) external;
     function earned(address account)  external view returns(uint256);
     function getMineInfo() external view returns (uint256,uint256);
