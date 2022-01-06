@@ -66,11 +66,11 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         _;
     }
 
-    constructor(address _multiSignature,address _origin0,address _origin1)
+    constructor(address _multiSignature,address _origin0,address _origin1,address _rewardToken)
         proxyOwner(_multiSignature,_origin0,_origin1)
         public
     {
-
+        rewardToken = _rewardToken;
     }
 
     function getPoolInfo(uint256 _pid) external view returns (
@@ -100,32 +100,32 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
     }
     
-//    function getExtFarmInfo(uint256 _pid) external view returns (
-//		address extFarmAddr,
-//        bool extEnableDeposit,
-//        uint256 extPid,
-//        uint256 extRewardPerShare,
-//        uint256 extTotalDebtReward,
-//        bool extEnableClaim,
-//        uint256 extAccPerShare){
-//
-//        require(_pid < poolInfo.length,"pid >= poolInfo.length");
-//        PoolInfo storage pool = poolInfo[_pid];
-//
-//        return (
-//            pool.extFarmInfo.extFarmAddr,
-//            pool.extFarmInfo.extEnableDeposit,
-//            pool.extFarmInfo.extPid,
-//            pool.extFarmInfo.extRewardPerShare,
-//            pool.extFarmInfo.extTotalDebtReward,
-//            pool.extFarmInfo.extEnableClaim,
-//            pool.extFarmInfo.extRewardPerShare);
-//
-//    }
+    function getExtFarmInfo(uint256 _pid) external view returns (
+		address extFarmAddr,
+        bool extEnableDeposit,
+        uint256 extPid,
+        uint256 extRewardPerShare,
+        uint256 extTotalDebtReward,
+        bool extEnableClaim,
+        uint256 extAccPerShare){
 
-//    function poolLength() external view returns (uint256) {
-//        return poolInfo.length;
-//    }
+        require(_pid < poolInfo.length,"pid >= poolInfo.length");
+        PoolInfo storage pool = poolInfo[_pid];
+
+        return (
+            pool.extFarmInfo.extFarmAddr,
+            pool.extFarmInfo.extEnableDeposit,
+            pool.extFarmInfo.extPid,
+            pool.extFarmInfo.extRewardPerShare,
+            pool.extFarmInfo.extTotalDebtReward,
+            pool.extFarmInfo.extEnableClaim,
+            pool.extFarmInfo.extRewardPerShare);
+
+    }
+
+    function poolLength() external view returns (uint256) {
+        return poolInfo.length;
+    }
 
     // Add a new lp to the pool. Can only be called by the owner.
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
@@ -650,12 +650,12 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         emit GetBackLeftRewardToken(_to, rewardTokenBal);
     }
 
-    function setRewardToken( address _rewardToken)
-        public onlyOrigin
-        notZeroAddress(_rewardToken)
-    {
-      rewardToken = _rewardToken;
-    }
+//    function setRewardToken( address _rewardToken)
+//        public onlyOrigin
+//        notZeroAddress(_rewardToken)
+//    {
+//      rewardToken = _rewardToken;
+//    }
 
     function totalStaked(uint256 _pid) public view returns (uint256){
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
