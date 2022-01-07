@@ -28,17 +28,18 @@ const BN = require("bn.js");
 var utils = require('../utils.js');
 web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
 
-const UsdcDecimal = 10**6;
+const UsdcDecimal = new BN(1000000);
 
 /**************************************************
  test case only for the ganahce command
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
 contract('Boost farm Test', function (accounts){
-    let rewardOneDay = new BN(5000).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
-    let blockSpeed = 5;
+    let rewardOneDay = new BN(500000).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
+    let blockSpeed = 2;
     let bocksPerDay = 3600*24/blockSpeed;
     let rewardPerBlock = new BN(rewardOneDay).div(new BN(bocksPerDay));
+    rewardPerBlock = rewardPerBlock.toString(10);
     console.log(rewardPerBlock.toString(10));
 
     let staker1 = accounts[2];
@@ -52,7 +53,6 @@ contract('Boost farm Test', function (accounts){
     let teammems = [teamMember1,teamMember2];
     let teammemsRatio = [20,80];
 
-    let disSpeed1 = web3.utils.toWei('1', 'ether');
 
     let VAL_10M = web3.utils.toWei('10000000', 'ether');
     let VAL_99M = web3.utils.toWei(  '99999999', 'ether');
@@ -195,7 +195,7 @@ contract('Boost farm Test', function (accounts){
     let msgData = farmproxyinst.contract.methods.add(lp.address,
                                                      startTime,
                                                      endBlock,
-                                                     disSpeed1,
+                                                     rewardPerBlock,
                                                      rewardOneDay,
                                                      24 * 3600,
                                                      5).encodeABI();
@@ -216,7 +216,7 @@ contract('Boost farm Test', function (accounts){
          await farmproxyinst.add(lp.address,
             startTime,
             endBlock,
-            disSpeed1,
+            rewardPerBlock,
             rewardOneDay,
             24 * 3600,
             5,
@@ -285,5 +285,34 @@ contract('Boost farm Test', function (accounts){
 
     })
 
+    it("[0030] check staker reward,should pass", async()=> {
+        utils.sleep(3000);
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0, staker1)
+        console.log("allpending=", web3.utils.fromWei(res[0]), new BN(res[1]).toString(10), web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.allPendingReward(0, staker2)
+        console.log("allpending=", web3.utils.fromWei(res[0]), new BN(res[1]).toString(10), web3.utils.fromWei(res[2]));
+
+        res = await farmproxyinst.allPendingReward(0, staker3)
+        console.log("allpending=", web3.utils.fromWei(res[0]), new BN(res[1]).toString(10), web3.utils.fromWei(res[2]));
+
+    })
+
+    it("[0040] check staker1 withdraw reward,should pass", async()=> {
+        let usdcPreBalance = await usdc.balanceOf(staker1);
+        let joePreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+
+        res = await farmproxyinst.withdraw(0,0,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let usdcAfterBalance = await usdc.balanceOf(staker1);
+        console.log("staker1 usdc reward=" + (usdcAfterBalance - usdcPreBalance));
+
+        let joeAfterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+        console.log("staker1 joe reward=" + (joeAfterBalance - joePreBalance));
+    })
 
 })

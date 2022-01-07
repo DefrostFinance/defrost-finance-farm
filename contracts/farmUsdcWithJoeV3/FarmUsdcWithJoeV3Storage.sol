@@ -65,21 +65,6 @@ contract FarmUsdcWithJoeV3Storage is Halt, ReentrancyGuard{
     PoolInfo[] poolInfo;   // Info of each pool.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    uint256 constant internal rayDecimals = 1000e18;//100%
-
-    uint256 public BaseBoostTokenAmount = 1000e18;//1000 ether;
-    uint256 public BaseIncreaseRatio = 30e18; //3%
-
-    uint256 public RatioIncreaseStep = 10e18;// 1%
-    uint256 public BoostTokenStepAmount = 1000e18;//1000 ether;
-
-    uint256 public MaxFactor = 5500e18;//5.5 multiple
-
-
-    address public smelt;
-    uint256 internal totalsupply;
-    mapping(address => uint256) internal balances;
-
-    address public tokenFarm;
+    uint256 constant public REWARD_PER_SHARE_DECIMAL = 1e24;
 
 }

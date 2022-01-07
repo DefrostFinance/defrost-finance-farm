@@ -80,7 +80,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         uint256 newStartBlock,    //
         uint256 bonusEndBlock,    // Block number when bonus defrost period ends.
         uint256 lastRewardBlock,  // Last block number that defrost distribution occurs.
-        uint256 accRewardPerShare,// Accumulated defrost per share, times 1e12. See below.
+        uint256 accRewardPerShare,// Accumulated defrost per share, times REWARD_PER_SHARE_DECIMAL. See below.
         uint256 rewardPerBlock,   // defrost tokens created per block.
         uint256 totalDebtReward) {
 
@@ -241,11 +241,12 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         if (block.number > pool.lastRewardBlock && pool.currentSupply != 0) {
             uint256 multiplier = getMultiplier(_pid);
             uint256 reward = multiplier.mul(pool.rewardPerBlock);
-            accRewardPerShare = accRewardPerShare.add(reward.mul(1e12).div(pool.currentSupply));
+            //accRewardPerShare = accRewardPerShare.add(reward.mul(1e12).div(pool.currentSupply));
+            accRewardPerShare = accRewardPerShare.add(reward.mul(REWARD_PER_SHARE_DECIMAL).div(pool.currentSupply));
         }
 
         // return (user.amount, user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt));//orginal
-       uint256 pendingReward = user.amount.mul(accRewardPerShare).div(1e12).sub(user.rewardDebt);
+       uint256 pendingReward = user.amount.mul(accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
 
        //(pendingReward,) = getUserRewardAndTeamReward(_pid,_user,pendingReward);
 
@@ -263,7 +264,8 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
             if(pool.extFarmInfo.extFarmAddr == address(0x0) || pool.extFarmInfo.extFarmAddr != extFarmAddr) continue;
 
-            allTotalUnclaimed = pool.currentSupply.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(pool.extFarmInfo.extTotalDebtReward).add(allTotalUnclaimed);
+            //allTotalUnclaimed = pool.currentSupply.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(pool.extFarmInfo.extTotalDebtReward).add(allTotalUnclaimed);
+            allTotalUnclaimed = pool.currentSupply.mul(pool.extFarmInfo.extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(pool.extFarmInfo.extTotalDebtReward).add(allTotalUnclaimed);
 
         }
 
@@ -284,7 +286,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
         require(_amount <= maxDistribute,"distibute too much external rewards");
 
-        pool.extFarmInfo.extRewardPerShare = _amount.mul(1e12).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
+        pool.extFarmInfo.extRewardPerShare = _amount.mul(REWARD_PER_SHARE_DECIMAL).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
     }
 
     function getExtFarmRewardRate(IChef chef,IERC20 lpToken, uint256 extPid) internal view returns(uint256 rate){
@@ -301,7 +303,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 		if(totalSupply==0) {
 			return 0;
 		}
-        rate = multiplier.mul(extRewardPerSec).mul(allocPoint).mul(1e12).div(totalAllocPoint).div(totalSupply);
+        rate = multiplier.mul(extRewardPerSec).mul(allocPoint).mul(REWARD_PER_SHARE_DECIMAL).div(totalAllocPoint).div(totalSupply);
     }
 
     function extRewardPerBlock(uint256 _pid) public view returns(uint256) {
@@ -313,7 +315,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         IChef chef = IChef(pool.extFarmInfo.extFarmAddr);
         uint256 rate = getExtFarmRewardRate(chef, IERC20(pool.lpToken),pool.extFarmInfo.extPid);
         (uint256 amount,) = chef.userInfo(_pid,address(this));
-        uint256 extReward = rate.mul(amount).div(1e12);
+        uint256 extReward = rate.mul(amount).div(REWARD_PER_SHARE_DECIMAL);
 
         return extReward;
     }
@@ -357,7 +359,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
             if(pool.currentSupply > 0){
                 uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this)).sub(oldJoeRewarad);
 
-                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(REWARD_PER_SHARE_DECIMAL).div(pool.currentSupply).add(pool.extFarmInfo.extRewardPerShare);
             }
 
             pool.extFarmInfo.extEnableDeposit = enable;
@@ -413,10 +415,10 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
         if(pool.extFarmInfo.extEnableDeposit){
             (uint256 totalPendingJoe,,,) = IChef(pool.extFarmInfo.extFarmAddr).pendingTokens(pool.extFarmInfo.extPid,address(this));
-            extRewardPerShare = totalPendingJoe.mul(1e12).div(pool.currentSupply).add(extRewardPerShare);
+            extRewardPerShare = totalPendingJoe.mul(REWARD_PER_SHARE_DECIMAL).div(pool.currentSupply).add(extRewardPerShare);
         }
 
-        uint256 userPendingJoe = user.amount.mul(extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+        uint256 userPendingJoe = user.amount.mul(extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.extRewardDebt);
 
         return userPendingJoe;
     }
@@ -440,13 +442,13 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
             deltaJoeReward = deltaJoeReward.sub(oldJoeRewarad);
 
             if(oldTotalDeposit > 0 && deltaJoeReward > 0){
-                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(REWARD_PER_SHARE_DECIMAL).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
             }
 
         }
 
         if(pool.extFarmInfo.extEnableClaim) {
-            uint256 transferJoeAmount = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+            uint256 transferJoeAmount = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.extRewardDebt);
 
             if(transferJoeAmount > 0){
                 address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).JOE();
@@ -455,7 +457,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         }
 
         pool.extFarmInfo.extTotalDebtReward = pool.extFarmInfo.extTotalDebtReward.sub(user.extRewardDebt);
-        user.extRewardDebt = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(1e12);
+        user.extRewardDebt = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
         pool.extFarmInfo.extTotalDebtReward = pool.extFarmInfo.extTotalDebtReward.add(user.extRewardDebt);
 
     }
@@ -478,12 +480,12 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
             uint256 deltaJoeReward = IERC20(IChef(pool.extFarmInfo.extFarmAddr).JOE()).balanceOf(address(this)).sub(oldJoeRewarad);
             if(oldTotalDeposit > 0 && deltaJoeReward > 0)
-                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(1e12).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
+                pool.extFarmInfo.extRewardPerShare = deltaJoeReward.mul(REWARD_PER_SHARE_DECIMAL).div(oldTotalDeposit).add(pool.extFarmInfo.extRewardPerShare);
 
         }
 
         if(pool.extFarmInfo.extEnableClaim) {
-            uint256 transferJoeAmount = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(1e12).sub(user.extRewardDebt);
+            uint256 transferJoeAmount = user.amount.mul(pool.extFarmInfo.extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.extRewardDebt);
 
             if(transferJoeAmount > 0){
                 address JoeToken = IChef(pool.extFarmInfo.extFarmAddr).JOE();
@@ -492,7 +494,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         }
 
         pool.extFarmInfo.extTotalDebtReward = pool.extFarmInfo.extTotalDebtReward.sub(user.extRewardDebt);
-        user.extRewardDebt = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(1e12);
+        user.extRewardDebt = user.amount.sub(_amount).mul(pool.extFarmInfo.extRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
         pool.extFarmInfo.extTotalDebtReward = pool.extFarmInfo.extTotalDebtReward.add(user.extRewardDebt);
     }
 
@@ -511,7 +513,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
         uint256 multiplier = getMultiplier(_pid);
         uint256 reward = multiplier.mul(pool.rewardPerBlock);
-        pool.accRewardPerShare = pool.accRewardPerShare.add(reward.mul(1e12).div(pool.currentSupply));
+        pool.accRewardPerShare = pool.accRewardPerShare.add(reward.mul(REWARD_PER_SHARE_DECIMAL).div(pool.currentSupply));
         pool.lastRewardBlock = block.number;
     }
 
@@ -538,8 +540,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
         UserInfo storage user = userInfo[_pid][msg.sender];
         if (user.amount > 0) {
-            uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
-            //mintUserRewardAndTeamReward(_pid,msg.sender,pending);
+            uint256 pending = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
             IERC20(rewardToken).safeTransfer(address(msg.sender), pending);
         }
 
@@ -554,7 +555,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         depositLPToChef(_pid,_amount);
             
         pool.totalDebtReward = pool.totalDebtReward.sub(user.rewardDebt);
-        user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(1e12);
+        user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
         pool.totalDebtReward = pool.totalDebtReward.add(user.rewardDebt);
 
         emit Deposit(msg.sender, _pid, _amount);
@@ -571,8 +572,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
 
         updatePool(_pid);
 
-        uint256 pending = user.amount.mul(pool.accRewardPerShare).div(1e12).sub(user.rewardDebt);
-        //mintUserRewardAndTeamReward(_pid,msg.sender,pending);
+        uint256 pending = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
         IERC20(rewardToken).safeTransfer(address(msg.sender), pending);
 
         if(_amount > 0) {
@@ -582,7 +582,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         }
 
         pool.totalDebtReward = pool.totalDebtReward.sub(user.rewardDebt);
-        user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(1e12);
+        user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
         pool.totalDebtReward = pool.totalDebtReward.add(user.rewardDebt);
 
         emit Withdraw(msg.sender, _pid, _amount);
@@ -620,7 +620,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
             PoolInfo storage pool = poolInfo[pid];
             require(block.number > pool.bonusEndBlock, "quit block.number <= pid.bonusEndBlock");
             updatePool(pid);
-            uint256 reward = pool.currentSupply.mul(pool.accRewardPerShare).div(1e12).sub(pool.totalDebtReward);
+            uint256 reward = pool.currentSupply.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(pool.totalDebtReward);
             rewardTokenBal = rewardTokenBal.sub(reward);
         }
         safeRewardTransfer(_to, rewardTokenBal);
