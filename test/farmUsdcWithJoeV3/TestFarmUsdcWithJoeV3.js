@@ -35,7 +35,7 @@ const UsdcDecimal = new BN(1000000);
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
 contract('Boost farm Test', function (accounts){
-    let rewardOneDay = new BN(500000).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
+    let rewardOneDay = new BN(300).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
     let blockSpeed = 2;
     let bocksPerDay = 3600*24/blockSpeed;
     let rewardPerBlock = new BN(rewardOneDay).div(new BN(bocksPerDay));
@@ -313,6 +313,35 @@ contract('Boost farm Test', function (accounts){
 
         let joeAfterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
         console.log("staker1 joe reward=" + (joeAfterBalance - joePreBalance));
+    })
+
+    it("[0050] check staker1 withdraw lp,should pass", async()=>{
+        time.increase(2000);
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker1)
+        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        let stakeAmount = res[0];
+
+        let preBalance = await usdc.balanceOf(staker1);
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+
+        let lpprebalance = web3.utils.fromWei(await lp.balanceOf(staker1));
+
+        res = await farmproxyinst.withdraw(0,stakeAmount,{from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = await usdc.balanceOf(staker1);
+        console.log("staker1 usdc reward=" + (afterBalance - preBalance));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker1));
+        console.log("joe reward=" + (pngpafterBalance - pngpreBalance));
+
+        let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker1));
+        console.log("lp get back=" + (lpafterbalance - lpprebalance));
+
     })
 
 })
