@@ -592,7 +592,7 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         require(_pid < poolInfo.length, "pid >= poolInfo.length");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        _amount = user.amount;
+        uint256 _amount = user.amount;
 
         withDrawLPFromExt(_pid,_amount);
         updatePool(_pid);
@@ -672,12 +672,12 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         emit GetBackLeftRewardToken(_to, rewardTokenBal);
     }
 
-//    function setRewardToken( address _rewardToken)
-//        public onlyOrigin
-//        notZeroAddress(_rewardToken)
-//    {
-//      rewardToken = _rewardToken;
-//    }
+    function setRewardToken( address _rewardToken)
+        public onlyOrigin
+        notZeroAddress(_rewardToken)
+    {
+       rewardToken = _rewardToken;
+    }
 
     function totalStaked(uint256 _pid) public view returns (uint256){
         require(_pid < poolInfo.length,"pid >= poolInfo.length");
