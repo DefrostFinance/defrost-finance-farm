@@ -35,7 +35,7 @@ const UsdcDecimal = new BN(1000000);
  ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=100000 --blockTime 1
  **************************************************/
 contract('Boost farm Test', function (accounts){
-    let rewardOneDay = new BN(300).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
+    let rewardOneDay = new BN(10).mul(new BN(UsdcDecimal)).toString(10);//web3.utils.toWei('5000', 'ether');
     let blockSpeed = 2;
     let bocksPerDay = 3600*24/blockSpeed;
     let rewardPerBlock = new BN(rewardOneDay).div(new BN(bocksPerDay));
@@ -340,6 +340,35 @@ contract('Boost farm Test', function (accounts){
         console.log("joe reward=" + (pngpafterBalance - pngpreBalance));
 
         let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker1));
+        console.log("lp get back=" + (lpafterbalance - lpprebalance));
+
+    })
+
+    it("[0060] check staker2 emergencyWithdraw Lp,should pass", async()=>{
+        time.increase(2000);
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker2)
+        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        let stakeAmount = new BN(res[0]).div(new BN(2));
+
+        let preBalance = await usdc.balanceOf(staker2);
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+
+        let lpprebalance = web3.utils.fromWei(await lp.balanceOf(staker2));
+
+        res = await farmproxyinst.emergencyWithdraw(0,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = await usdc.balanceOf(staker2);
+        console.log("staker1 usdc reward=" + (afterBalance - preBalance));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+        console.log("joe reward=" + (pngpafterBalance - pngpreBalance));
+
+        let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker2));
         console.log("lp get back=" + (lpafterbalance - lpprebalance));
 
     })

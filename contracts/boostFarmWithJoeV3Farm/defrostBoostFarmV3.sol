@@ -592,6 +592,28 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
+    function emergencyWithdraw(uint _pid) public notHalted nonReentrant {
+        require(_pid < poolInfo.length, "pid >= poolInfo.length");
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        uint256 _amount = user.amount;
+
+        withDrawLPFromExt(_pid,_amount);
+        updatePool(_pid);
+
+        //  uint256 pending = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
+        //  IERC20(rewardToken).safeTransfer(address(msg.sender), pending);
+
+        user.amount = user.amount.sub(_amount);
+        pool.currentSupply = pool.currentSupply.sub(_amount);
+        IERC20(pool.lpToken).safeTransfer(address(msg.sender), _amount);
+
+        // pool.totalDebtReward = pool.totalDebtReward.sub(user.rewardDebt);
+        // user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
+        //  pool.totalDebtReward = pool.totalDebtReward.add(user.rewardDebt);
+
+        emit Withdraw(msg.sender, _pid, _amount);
+    }
 
     function emergencyWithdrawExtLp(uint256 _pid) public onlyOrigin {
         require(_pid < poolInfo.length, "pid >= poolInfo.length");
@@ -872,6 +894,18 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
 
     function totalSupply() external view returns (uint256){
         return totalsupply;
+    }
+
+    function boostEmergencyWithdraw() public notHalted nonReentrant {
+
+        uint256 _amount = balances[msg.sender];
+
+        totalsupply = totalsupply.sub(_amount);
+        balances[msg.sender] = balances[msg.sender].sub(_amount);
+
+        IERC20(smelt).safeTransfer(msg.sender, _amount);
+
+        emit BoostWithdraw(msg.sender, _amount);
     }
 
 }
