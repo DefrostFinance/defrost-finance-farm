@@ -136,9 +136,8 @@ contract PreGenesis is PreGenesisData,proxyOwner{
 
     function subAsset(address account,uint256 amount) internal {
        assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.sub(amount);
-       assetInfoMap[account].originAsset =  assetInfoMap[account].originAsset.sub(amount);
-
-       totalAssetAmount = totalAssetAmount.sub(amount);
+      // assetInfoMap[account].originAsset =  assetInfoMap[account].originAsset.sub(amount);
+     //  totalAssetAmount = totalAssetAmount.sub(amount);
        emit SubAsset(account,amount,amount);
     }
 
