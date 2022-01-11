@@ -59,10 +59,11 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event GetBackLeftRewardToken(address to, uint256 amount);
+    //event GetBackLeftRewardToken(address to, uint256 amount);
 
     event BoostDeposit(address indexed user,  uint256 amount);
     event BoostWithdraw(address indexed user, uint256 amount);
+    event BoosEmergencytWithdraw(address indexed user, uint256 amount);
 
     modifier notZeroAddress(address inputAddress) {
         require(inputAddress != address(0), "input zero address");
@@ -606,7 +607,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
         pool.currentSupply = pool.currentSupply.sub(_amount);
         IERC20(pool.lpToken).safeTransfer(address(msg.sender), _amount);
 
-        emit Withdraw(msg.sender, _pid, _amount);
+        emit EmergencyWithdraw(msg.sender, _pid, _amount);
     }
 
     function emergencyWithdrawExtLp(uint256 _pid) public onlyOrigin {
@@ -667,7 +668,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
     function getBackLeftRewardToken(address _to) public onlyOrigin {
         uint256 rewardTokenBal = IERC20(rewardToken).balanceOf(address(this));
         safeRewardTransfer(_to, rewardTokenBal);
-        emit GetBackLeftRewardToken(_to, rewardTokenBal);
+       // emit GetBackLeftRewardToken(_to, rewardTokenBal);
     }
 
     function setDefrostAddress( address _rewardToken,
@@ -900,7 +901,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
 
         IERC20(smelt).safeTransfer(msg.sender, _amount);
 
-        emit BoostWithdraw(msg.sender, _amount);
+        emit BoosEmergencytWithdraw(msg.sender, _amount);
     }
 
 }

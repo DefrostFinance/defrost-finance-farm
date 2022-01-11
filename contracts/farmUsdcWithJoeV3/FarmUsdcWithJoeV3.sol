@@ -597,18 +597,11 @@ contract FarmUsdcWithJoeV3 is FarmUsdcWithJoeV3Storage,proxyOwner{
         withDrawLPFromExt(_pid,_amount);
         updatePool(_pid);
 
-      //  uint256 pending = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
-      //  IERC20(rewardToken).safeTransfer(address(msg.sender), pending);
-
         user.amount = user.amount.sub(_amount);
         pool.currentSupply = pool.currentSupply.sub(_amount);
         IERC20(pool.lpToken).safeTransfer(address(msg.sender), _amount);
 
-       // pool.totalDebtReward = pool.totalDebtReward.sub(user.rewardDebt);
-       // user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
-      //  pool.totalDebtReward = pool.totalDebtReward.add(user.rewardDebt);
-
-        emit Withdraw(msg.sender, _pid, _amount);
+        emit EmergencyWithdraw(msg.sender, _pid, _amount);
     }
 
     function emergencyWithdrawExtLp(uint256 _pid) public onlyOrigin {
