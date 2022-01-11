@@ -122,7 +122,7 @@ contract BoostTokenFarmV3 is Halt, BoostTokenFarmDataV3,proxyOwner{
 //        require(startTime>0,"farm is not inited");
 //    }
 //
-//    function unstake(address account) public updateReward(account) onlyBoostFarm {
-//    }
+    function unstake(address account) public updateReward(account) onlyBoostFarm {
+    }
 
 }

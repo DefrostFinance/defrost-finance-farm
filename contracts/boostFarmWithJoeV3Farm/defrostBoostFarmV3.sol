@@ -7,6 +7,7 @@ import "../modules/proxyOwner.sol";
 
 interface ITeamRewardSC {
     function inputTeamReward(uint256 _amount) external;
+    function unstake(address account) external;
 }
 
 interface IReleaseSC {
@@ -601,16 +602,9 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
         withDrawLPFromExt(_pid,_amount);
         updatePool(_pid);
 
-        //  uint256 pending = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL).sub(user.rewardDebt);
-        //  IERC20(rewardToken).safeTransfer(address(msg.sender), pending);
-
         user.amount = user.amount.sub(_amount);
         pool.currentSupply = pool.currentSupply.sub(_amount);
         IERC20(pool.lpToken).safeTransfer(address(msg.sender), _amount);
-
-        // pool.totalDebtReward = pool.totalDebtReward.sub(user.rewardDebt);
-        // user.rewardDebt = user.amount.mul(pool.accRewardPerShare).div(REWARD_PER_SHARE_DECIMAL);
-        //  pool.totalDebtReward = pool.totalDebtReward.add(user.rewardDebt);
 
         emit Withdraw(msg.sender, _pid, _amount);
     }
@@ -683,12 +677,12 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
                                 address _tokenFarm,
                                 address _smelt)
         public onlyOrigin
-        notZeroAddress(_rewardToken)
-        notZeroAddress(_h2o)
-        notZeroAddress(_teamRewardSc)
-        notZeroAddress(_releaseSc)
-        notZeroAddress(_tokenFarm)
-        notZeroAddress(_smelt)
+//        notZeroAddress(_rewardToken)
+//        notZeroAddress(_h2o)
+//        notZeroAddress(_teamRewardSc)
+//        notZeroAddress(_releaseSc)
+//        notZeroAddress(_tokenFarm)
+//        notZeroAddress(_smelt)
     {
 
         rewardToken = _rewardToken;
@@ -703,7 +697,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
     }
 
     function totalStaked(uint256 _pid) public view returns (uint256){
-        require(_pid < poolInfo.length,"pid >= poolInfo.length");
+       // require(_pid < poolInfo.length,"pid >= poolInfo.length");
 
         PoolInfo storage pool = poolInfo[_pid];
         return pool.currentSupply;
@@ -733,7 +727,7 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
     function setWhiteList(address[] memory _user)
         public onlyOrigin
     {
-        require(_user.length>0,"array length is 0");
+       // require(_user.length>0,"array length is 0");
         for(uint256 i=0;i<_user.length;i++) {
             whiteListLpUserInfo[_user[i]] = true;
         }
@@ -898,8 +892,9 @@ contract DefrostBoostFarmV3 is defrostBoostFarmStorageV3,proxyOwner{
 
     function boostEmergencyWithdraw() public notHalted nonReentrant {
 
-        uint256 _amount = balances[msg.sender];
+        ITokenFarmSC(tokenFarm).unstake(msg.sender);
 
+        uint256 _amount = balances[msg.sender];
         totalsupply = totalsupply.sub(_amount);
         balances[msg.sender] = balances[msg.sender].sub(_amount);
 
