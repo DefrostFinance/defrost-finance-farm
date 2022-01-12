@@ -25,13 +25,16 @@ contract PreGenesis is PreGenesisData,proxyOwner{
 
     }
 
-    function initContract(address _coin,int256 _interestRate,uint256 _interestInterval,
+    function initContract(address _coin,uint256 _interestRate,uint256 _interestInterval,
         uint256 _assetCeiling,uint256 _assetFloor)external originOnce{
         coin = _coin;
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
         _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
+
         allowWithdraw = false;
+        allowDeposit = false;
+
         emit InitContract(msg.sender, _coin,_interestRate,_interestInterval,_assetCeiling,_assetFloor);
     }
 
@@ -40,7 +43,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         assetFloor = _assetFloor;
     }
 
-    function setInterestInfo(int256 _interestRate,uint256 _interestInterval)external onlyOrigin{
+    function setInterestInfo(uint256 _interestRate,uint256 _interestInterval)external onlyOrigin{
         _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
     }
 
@@ -54,7 +57,13 @@ contract PreGenesis is PreGenesisData,proxyOwner{
 
     function deposit(uint256 amount) notHalted nonReentrant settleAccount(msg.sender) external{
         require(allowDeposit,"deposit is not allowed!");
+        require(totalAssetAmount < assetCeiling, "asset is overflow");
+
+        if(totalAssetAmount.add(amount)>assetCeiling) {
+            amount = assetCeiling.sub(totalAssetAmount);
+        }
         IERC20(coin).safeTransferFrom(msg.sender, address(this), amount);
+
         addAsset(msg.sender,amount);
         emit Deposit(msg.sender,msg.sender,amount);
     }
@@ -62,7 +71,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     function transferVCoin(uint256 amount)
         notHalted
         nonReentrant
-        settleAccount(msg.sender)
+        settleAccount(targetSc)
         external
     {
         subAsset(msg.sender,amount);
@@ -76,13 +85,14 @@ contract PreGenesis is PreGenesisData,proxyOwner{
          external
     {
         require(allowWithdraw,"withdraw is not allowed!");
+
         uint256 amount = assetInfoMap[msg.sender].originAsset;
         subAsset(msg.sender,amount);
         IERC20(coin).safeTransfer(msg.sender, amount);
         emit Withdraw(coin,msg.sender,amount);
     }
 
-    function TransferAllCoin() public onlyOrigin {
+    function TransferCoinToTarget() public onlyOrigin {
         uint256 coinBal = IERC20(coin).balanceOf(address(this));
         IERC20(coin).safeTransfer(targetSc, coinBal);
         emit TransferToTarget(msg.sender,targetSc,coinBal);
@@ -96,18 +106,18 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         return assetInfoMap[account].assetAndInterest.mul(newRate)/assetInfoMap[account].interestRateOrigin;
     }
 
-    function getInterestInfo()external view returns(int256,uint256){
+    function getInterestInfo()external view returns(uint256,uint256){
         return (interestRate,interestInterval);
     }
 
-    function _setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate) internal {
+    function _setInterestInfo(uint256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate) internal {
         if (accumulatedRate == 0){
             accumulatedRate = rayDecimals;
         }
-        require(_interestRate<=1e27 && _interestRate>=-1e27,"input stability fee is too large");
+        require(_interestRate<=1e27,"input stability fee is too large");
         require(_interestInterval>0,"input mine Interval must larger than zero");
         uint256 newLimit = rpower(uint256(1e27+_interestRate),31536000/_interestInterval,rayDecimals);
-        require(newLimit<=maxRate && newLimit>=minRate,"input stability fee is out of range");
+        require(newLimit<=maxRate && newLimit>=minRate,"input rate is out of range");
         _interestSettlement();
         interestRate = _interestRate;
         interestInterval = _interestInterval;
@@ -115,51 +125,19 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     }
 
 
-    /**
-     * @dev mint mineCoin to account when account add collateral to collateral pool, only manager contract can modify database.
-     * @param account user's account
-     * @param amount the mine shared amount
-     */
     function addAsset(address account,uint256 amount) internal /*settleAccount(account)*/{
         assetInfoMap[account].originAsset = assetInfoMap[account].originAsset.add(amount);
         assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.add(amount);
         totalAssetAmount = totalAssetAmount.add(amount);
-        require(assetInfoMap[account].assetAndInterest >= assetFloor, "Debt is below the limit");
-        require(totalAssetAmount <= assetCeiling, "vault debt is overflow");
         emit AddAsset(account,amount);
     }
 
     function subAsset(address account,uint256 amount) internal {
        require(amount<=assetInfoMap[account].assetAndInterest,"amount is bigger than vCoin");
        assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.sub(amount);
-      // assetInfoMap[account].originAsset =  assetInfoMap[account].originAsset.sub(amount);
-     //  totalAssetAmount = totalAssetAmount.sub(amount);
        emit SubAsset(account,amount,amount);
     }
 
-//    function subAsset(address account,uint256 amount)internal returns(uint256) {
-//        uint256 originBalance = assetInfoMap[account].originAsset;
-//        uint256 assetAndInterest = assetInfoMap[account].assetAndInterest;
-//
-//        uint256 _subAsset;
-//        if(assetAndInterest == amount){
-//            _subAsset = originBalance;
-//            assetInfoMap[account].originAsset = 0;
-//            assetInfoMap[account].assetAndInterest = 0;
-//        }else if(assetAndInterest > amount){
-//            _subAsset = originBalance.mul(amount)/assetAndInterest;
-//            assetInfoMap[account].assetAndInterest = assetAndInterest.sub(amount);
-//            require(assetInfoMap[account].assetAndInterest >= assetFloor, "Debt is below the limit");
-//            assetInfoMap[account].originAsset = originBalance.sub(_subAsset);
-//
-//        }else{
-//            require(false,"overflow asset balance");
-//        }
-//
-//        totalAssetAmount = totalAssetAmount.sub(amount);
-//        emit SubAsset(account,amount,_subAsset);
-//        return _subAsset;
-//    }
 
     function rpower(uint256 x, uint256 n, uint256 base) internal pure returns (uint256 z) {
         assembly {
