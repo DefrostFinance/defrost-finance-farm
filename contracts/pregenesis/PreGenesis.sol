@@ -59,22 +59,15 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit Save(msg.sender,msg.sender,amount);
     }
 
-    function transferToTarget(uint256 amount)
+    function transferVCoin(uint256 amount)
         notHalted
         nonReentrant
         settleAccount(msg.sender)
         external
     {
-        if(amount == uint256(-1)){
-           amount = assetInfoMap[msg.sender].originAsset;
-        }
-
         subAsset(msg.sender,amount);
-
-        IERC20(coin).safeTransfer(targetSc, amount);
-        emit TransferToTarget(msg.sender,targetSc,amount);
+        addAsset(targetSc, amount);
     }
-
 
     function withdraw(address account, uint256 amount)
          notHalted
@@ -92,6 +85,19 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit Withdraw(msg.sender,account,amount);
     }
 
+    function TransferAllCoin() public onlyOrigin {
+        uint256 coinBal = IERC20(coin).balanceOf(address(this));
+        IERC20(coin).safeTransfer(targetSc, coinBal);
+        emit TransferToTarget(msg.sender,targetSc,coinBal);
+    }
+
+    function getVCoinBalance(address account)public view returns(uint256){
+        if(assetInfoMap[account].interestRateOrigin == 0 || interestInterval == 0){
+            return 0;
+        }
+        uint256 newRate = newAccumulatedRate();
+        return assetInfoMap[account].assetAndInterest.mul(newRate)/assetInfoMap[account].interestRateOrigin;
+    }
 
     function getInterestInfo()external view returns(int256,uint256){
         return (interestRate,interestInterval);
@@ -112,13 +118,6 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit SetInterestInfo(msg.sender,_interestRate,_interestInterval);
     }
 
-    function getVTokenBalance(address account)public view returns(uint256){
-        if(assetInfoMap[account].interestRateOrigin == 0 || interestInterval == 0){
-            return 0;
-        }
-        uint256 newRate = newAccumulatedRate();
-        return assetInfoMap[account].assetAndInterest.mul(newRate)/assetInfoMap[account].interestRateOrigin;
-    }
 
     /**
      * @dev mint mineCoin to account when account add collateral to collateral pool, only manager contract can modify database.
@@ -135,6 +134,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     }
 
     function subAsset(address account,uint256 amount) internal {
+       require(amount<=assetInfoMap[account].assetAndInterest,"amount is bigger than vCoin");
        assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.sub(amount);
       // assetInfoMap[account].originAsset =  assetInfoMap[account].originAsset.sub(amount);
      //  totalAssetAmount = totalAssetAmount.sub(amount);
