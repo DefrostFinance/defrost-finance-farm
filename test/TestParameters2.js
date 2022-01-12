@@ -13,8 +13,8 @@ let day     = 24*hour;
 let secperblock = 2;
 let blocksperday = day/secperblock;
 
-//let farmAmountPerday = web3.utils.toWei("160000","ether");
-let farmAmountPerday = new BN("20000"+"000000").div(new BN(30));
+let farmAmountPerday = web3.utils.toWei("1000","ether");
+//let farmAmountPerday = new BN("20000"+"000000").div(new BN(30));
 
 let rewardperblock = new BN(farmAmountPerday.toString(10)).div(new BN(blocksperday));
 let endblock = 9415408 + blocksperday*3*365; //about 3 years

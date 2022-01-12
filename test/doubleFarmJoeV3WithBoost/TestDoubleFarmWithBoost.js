@@ -661,14 +661,14 @@ contract('Boost farm Test', function (accounts){
 
         console.log("staker1 smelt getback=" + (afterBalance - preBalance));
 //////////////////////////////////////////////////////////////////////////////
-        preBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
-        stakedBal = await farmproxyinst.boostStakedFor(staker2);
-        res = await farmproxyinst.boostwithdraw(0,stakedBal,{from:staker2});
-        assert.equal(res.receipt.status,true);
-
-        afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
-
-        console.log("staker1 smelt getback=" + (afterBalance - preBalance));
+//         preBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
+//         stakedBal = await farmproxyinst.boostStakedFor(staker2);
+//         res = await farmproxyinst.boostwithdraw(0,stakedBal,{from:staker2});
+//         assert.equal(res.receipt.status,true);
+//
+//         afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
+//
+//         console.log("staker1 smelt getback=" + (afterBalance - preBalance));
 
 /////////////////////////////////////////////////////////////////////////////////////////
         preBalance = web3.utils.fromWei(await smelt.balanceOf(staker3));
@@ -713,10 +713,83 @@ contract('Boost farm Test', function (accounts){
 
         let afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker1));
         console.log("h2o reward getback=" + (afterBalance - preBalance));
+    })
 
+    it("[0050] check stakers getback left reward,should pass", async()=>{
+        let preBalance = web3.utils.fromWei(await h2o.balanceOf(staker1));
 
+        {
+            console.log("set reward rate");
+            let duration = 3600*24;
+            let rewardDay = web3.utils.toWei(""+3600,'ether');
+
+            let msgData = tokenFarmInt.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
+            let hash = await utils.createApplication(mulSiginst, accounts[8], tokenFarmInt.address, 0, msgData);
+
+            let index = await mulSiginst.getApplicationCount(hash);
+            index = index.toNumber() - 1;
+            console.log(index);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            assert.equal(res.receipt.status, true);
+
+            res = await mulSiginst.signApplication(hash, index, {from: accounts[8]})
+            assert.equal(res.receipt.status, true);
+
+            res = await utils.testSigViolation("multiSig setMultiUsersInfo: This tx is aprroved", async function () {
+                await  tokenFarmInt.getbackLeftMiningToken(staker1,{from:accounts[8]});
+            });
+
+            assert.equal(res, true, "should return true");
+
+        }
+
+        let afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker1));
+        console.log("h2o reward getback=" + (afterBalance - preBalance));
 
     })
 
+    it("[0060] check staker2 emergencyWithdraw Lp,should pass", async()=>{
+        time.increase(2000);
+
+        let block = await web3.eth.getBlock("latest");
+        console.log("blocknum1=" + block.number)
+
+        res = await farmproxyinst.allPendingReward(0,staker2)
+        console.log("allpending=",res[0].toString(),res[1].toString(),res[2].toString());
+        let stakeAmount = new BN(res[0]).div(new BN(2));
+
+        let preBalance = await usdc.balanceOf(staker2);
+        let pngpreBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+
+        let lpprebalance = web3.utils.fromWei(await lp.balanceOf(staker2));
+
+        res = await farmproxyinst.emergencyWithdraw(0,{from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        let afterBalance = await usdc.balanceOf(staker2);
+        console.log("staker1 usdc reward=" + (afterBalance - preBalance));
+
+        let pngpafterBalance = web3.utils.fromWei(await joeToken.balanceOf(staker2));
+        console.log("joe reward=" + (pngpafterBalance - pngpreBalance));
+
+        let lpafterbalance = web3.utils.fromWei(await lp.balanceOf(staker2));
+        console.log("lp get back=" + (lpafterbalance - lpprebalance));
+
+    })
+
+    it("[0070] check staker2 emergencyWithdraw boost token,should pass", async()=>{
+        time.increase(2000);
+
+        preBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
+        stakedBal = await farmproxyinst.boostStakedFor(staker2);
+        res = await farmproxyinst.boostEmergencyWithdraw({from:staker2});
+        assert.equal(res.receipt.status,true);
+
+        afterBalance = web3.utils.fromWei(await smelt.balanceOf(staker2));
+
+        console.log("staker2 smelt getback=" + (afterBalance - preBalance));
+
+    })
 
 })
