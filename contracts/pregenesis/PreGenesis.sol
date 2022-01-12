@@ -5,7 +5,6 @@ import "../modules/SafeMath.sol";
 import "../modules/proxyOwner.sol";
 import "../modules/IERC20.sol";
 import "../modules/SafeERC20.sol";
-
 import "./PreGenesisData.sol";
 
 /**
@@ -55,7 +54,12 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         allowDeposit = _enable;
     }
 
-    function deposit(uint256 amount) notHalted nonReentrant settleAccount(msg.sender) external{
+    function deposit(uint256 amount)
+        notHalted
+        nonReentrant
+        settleAccount(msg.sender)
+        external
+    {
         require(allowDeposit,"deposit is not allowed!");
         require(totalAssetAmount < assetCeiling, "asset is overflow");
 
@@ -64,7 +68,10 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         }
         IERC20(coin).safeTransferFrom(msg.sender, address(this), amount);
 
-        addAsset(msg.sender,amount);
+        assetInfoMap[msg.sender].originAsset = assetInfoMap[msg.sender].originAsset.add(amount);
+        assetInfoMap[msg.sender].assetAndInterest = assetInfoMap[msg.sender].assetAndInterest.add(amount);
+        totalAssetAmount = totalAssetAmount.add(amount);
+
         emit Deposit(msg.sender,msg.sender,amount);
     }
 
@@ -72,10 +79,11 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         notHalted
         nonReentrant
         settleAccount(targetSc)
+        settleAccount(msg.sender)
         external
     {
-        subAsset(msg.sender,amount);
-        addAsset(targetSc, amount);
+        assetInfoMap[msg.sender].assetAndInterest = assetInfoMap[msg.sender].assetAndInterest.sub(amount);
+        assetInfoMap[targetSc].assetAndInterest = assetInfoMap[targetSc].assetAndInterest.sub(amount);
     }
 
     function withdraw()
@@ -87,7 +95,8 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         require(allowWithdraw,"withdraw is not allowed!");
 
         uint256 amount = assetInfoMap[msg.sender].originAsset;
-        subAsset(msg.sender,amount);
+        assetInfoMap[msg.sender].originAsset = 0;
+        assetInfoMap[msg.sender].assetAndInterest = 0;
         IERC20(coin).safeTransfer(msg.sender, amount);
         emit Withdraw(coin,msg.sender,amount);
     }
@@ -118,24 +127,12 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         require(_interestInterval>0,"input mine Interval must larger than zero");
         uint256 newLimit = rpower(uint256(1e27+_interestRate),31536000/_interestInterval,rayDecimals);
         require(newLimit<=maxRate && newLimit>=minRate,"input rate is out of range");
+
         _interestSettlement();
         interestRate = _interestRate;
         interestInterval = _interestInterval;
+
         emit SetInterestInfo(msg.sender,_interestRate,_interestInterval);
-    }
-
-
-    function addAsset(address account,uint256 amount) internal /*settleAccount(account)*/{
-        assetInfoMap[account].originAsset = assetInfoMap[account].originAsset.add(amount);
-        assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.add(amount);
-        totalAssetAmount = totalAssetAmount.add(amount);
-        emit AddAsset(account,amount);
-    }
-
-    function subAsset(address account,uint256 amount) internal {
-       require(amount<=assetInfoMap[account].assetAndInterest,"amount is bigger than vCoin");
-       assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.sub(amount);
-       emit SubAsset(account,amount,amount);
     }
 
 
