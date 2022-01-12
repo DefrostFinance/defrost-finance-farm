@@ -56,7 +56,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         require(allowDeposit,"deposit is not allowed!");
         IERC20(coin).safeTransferFrom(msg.sender, address(this), amount);
         addAsset(msg.sender,amount);
-        emit Save(msg.sender,msg.sender,amount);
+        emit Deposit(msg.sender,msg.sender,amount);
     }
 
     function transferVCoin(uint256 amount)
@@ -69,20 +69,17 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         addAsset(targetSc, amount);
     }
 
-    function withdraw(address account, uint256 amount)
+    function withdraw()
          notHalted
          nonReentrant
          settleAccount(msg.sender)
          external
     {
         require(allowWithdraw,"withdraw is not allowed!");
-        if(amount == uint256(-1)){
-            amount = assetInfoMap[msg.sender].originAsset;
-        }
-
+        uint256 amount = assetInfoMap[msg.sender].originAsset;
         subAsset(msg.sender,amount);
-        IERC20(coin).safeTransfer(account, amount);
-        emit Withdraw(msg.sender,account,amount);
+        IERC20(coin).safeTransfer(msg.sender, amount);
+        emit Withdraw(coin,msg.sender,amount);
     }
 
     function TransferAllCoin() public onlyOrigin {
@@ -102,7 +99,6 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     function getInterestInfo()external view returns(int256,uint256){
         return (interestRate,interestInterval);
     }
-
 
     function _setInterestInfo(int256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate) internal {
         if (accumulatedRate == 0){
@@ -124,7 +120,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
      * @param account user's account
      * @param amount the mine shared amount
      */
-    function addAsset(address account,uint256 amount) internal settleAccount(account){
+    function addAsset(address account,uint256 amount) internal /*settleAccount(account)*/{
         assetInfoMap[account].originAsset = assetInfoMap[account].originAsset.add(amount);
         assetInfoMap[account].assetAndInterest = assetInfoMap[account].assetAndInterest.add(amount);
         totalAssetAmount = totalAssetAmount.add(amount);
