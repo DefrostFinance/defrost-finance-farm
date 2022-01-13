@@ -110,12 +110,13 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit TransferToTarget(msg.sender,targetSc,coinBal);
     }
 
-    function getVCoinBalance(address _user)public view returns(uint256){
+    function getBalance(address _user)public view returns(uint256,uint256){
         if(assetInfoMap[_user].interestRateOrigin == 0 || interestInterval == 0){
-            return 0;
+            return (0,0);
         }
         uint256 newRate = newAccumulatedRate();
-        return assetInfoMap[_user].assetAndInterest.mul(newRate)/assetInfoMap[_user].interestRateOrigin;
+        uint256 vcoin = assetInfoMap[_user].assetAndInterest.mul(newRate)/assetInfoMap[_user].interestRateOrigin;
+        return (assetInfoMap[_user].originAsset,vcoin);
     }
 
     function getInterestInfo()external view returns(uint256,uint256){
