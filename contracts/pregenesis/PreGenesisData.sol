@@ -8,11 +8,7 @@ import "../modules/ReentrancyGuard.sol";
 import "../modules/Halt.sol";
 
 contract PreGenesisData is Halt,ReentrancyGuard {
-    bool public allowWithdraw;
-    bool public allowDeposit;
 
-    address public coin;
-    address public targetSc;
     //Special decimals for calculation
     uint256 constant internal rayDecimals = 1e27;
 
@@ -35,6 +31,13 @@ contract PreGenesisData is Halt,ReentrancyGuard {
     // latest time to settlement
     uint256 internal latestSettleTime;
     uint256 internal accumulatedRate;
+
+    bool public allowWithdraw;
+    bool public allowDeposit;
+    uint256 public maxRate = 12e26;
+    uint256 public minRate = rayDecimals;
+    address public coin;
+    address public targetSc;
 
     event SetInterestInfo(address indexed from,uint256 _interestRate,uint256 _interestInterval);
     event AddAsset(address indexed recieptor,uint256 amount);

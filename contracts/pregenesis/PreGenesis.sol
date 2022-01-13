@@ -29,7 +29,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         coin = _coin;
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
-        _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
+        _setInterestInfo(_interestRate,_interestInterval,maxRate,rayDecimals);
 
         allowWithdraw = false;
         allowDeposit = false;
@@ -47,7 +47,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     }
 
     function setInterestInfo(uint256 _interestRate,uint256 _interestInterval)external onlyOrigin{
-        _setInterestInfo(_interestRate,_interestInterval,12e26,rayDecimals);
+        _setInterestInfo(_interestRate,_interestInterval,maxRate,rayDecimals);
     }
 
     function setWithdrawStatus(bool _enable)external onlyOrigin{
@@ -123,14 +123,14 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         return (interestRate,interestInterval);
     }
 
-    function _setInterestInfo(uint256 _interestRate,uint256 _interestInterval,uint256 maxRate,uint256 minRate) internal {
+    function _setInterestInfo(uint256 _interestRate,uint256 _interestInterval,uint256 _maxRate,uint256 _minRate) internal {
         if (accumulatedRate == 0){
             accumulatedRate = rayDecimals;
         }
         require(_interestRate<=1e27,"input stability fee is too large");
         require(_interestInterval>0,"input mine Interval must larger than zero");
         uint256 newLimit = rpower(uint256(1e27+_interestRate),31536000/_interestInterval,rayDecimals);
-        require(newLimit<=maxRate && newLimit>=minRate,"input rate is out of range");
+        require(newLimit<= _maxRate && newLimit>= _minRate,"input rate is out of range");
 
         _interestSettlement();
         interestRate = _interestRate;
