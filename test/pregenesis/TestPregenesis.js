@@ -50,13 +50,9 @@ contract('PreGenesis', function (accounts){
 
   let mocksc = accounts[9];
 
-  let disSpeed1 = web3.utils.toWei('1', 'ether');
+  let VAL_1M = '1000000'+'000000';
+  let VAL_10M = '10000000'+'000000';
 
-  let VAL_1M = web3.utils.toWei('1000000', 'ether');
-  let VAL_10M = web3.utils.toWei('10000000', 'ether');
-  let VAL_100M = web3.utils.toWei('100000000', 'ether');
-  let VAL_1B = web3.utils.toWei('1000000000', 'ether');
-  let VAL_10B = web3.utils.toWei('10000000000', 'ether');
 
   let minutes = 60;
   let hour    = 60*60;
@@ -151,114 +147,76 @@ contract('PreGenesis', function (accounts){
     console.log(res[0].toString(),res[1].toString());
   })
 
-/*
-  it("[0030] stake out,should pass", async()=>{
-        console.log("\n\n");
-        let preLpBlance = await melt.balanceOf(staker1);
-        console.log("preLpBlance=" + preLpBlance);
+  it("[0020] transfer vcoin,should pass", async()=>{
+        let res = await preGenesisinst.getBalance(mocksc);
+        console.log("pre sc balance",res[0].toString(),res[1].toString());
 
-        let preStakeBalance = await farminst.totalStakedFor(staker1);
-        preStakeBalance = (new BN(preStakeBalance.toString(10)).div(new BN(2))).integerValue();
+        res = await preGenesisinst.getBalance(staker1);
+        console.log("pre staker1 balance",res[0].toString(),res[1].toString());
 
-        console.log("pre sc staked for= " + preStakeBalance);
-
-        let res = await farminst.withdraw(preStakeBalance,{from:staker1});
+        res = await preGenesisinst.transferVCoin(VAL_1M,{from:staker1});
         assert.equal(res.receipt.status,true);
 
-        let afterStakeBalance = await farminst.totalStakedFor(staker1);
+        res = await preGenesisinst.getBalance(mocksc);
+        console.log("after sc balance",res[0].toString(),res[1].toString());
 
-        console.log("after sc staked for = " + afterStakeBalance);
+        res = await preGenesisinst.getBalance(staker1);
+        console.log("after staker1 balance",res[0].toString(),res[1].toString());
+   })
 
-        let diff = web3.utils.fromWei(new BN(preStakeBalance).toString(10)) - web3.utils.fromWei(afterStakeBalance);
-        console.log("stake balance diff = " + diff);
-
-        let afterLpBlance = await melt.balanceOf(staker1);
-        console.log("afterLpBlance=" + afterLpBlance);
-        let lpdiff = web3.utils.fromWei(afterLpBlance) - web3.utils.fromWei(preLpBlance);
-
-        console.log("staked balance "+diff,"lp balance change ="+lpdiff);
-
-        //assert.equal(lpdiff,web3.utils.fromWei(VAL_1M));
-    })
-
-
-
-    it("[0050] get back left mining token,should pass", async()=>{
-
-            let msgData = farminst.contract.methods.getbackLeftMiningToken(staker1).encodeABI();
-            let hash = await utils.createApplication(mulSiginst,operator0,farminst.address,0,msgData);
-
-            let res = await utils.testSigViolation("multiSig getbackLeftMiningToken: This tx is not aprroved",async function(){
-                await farminst.getbackLeftMiningToken(staker1,{from:operator0});
-            });
-            assert.equal(res,false,"should return false")
-
+    it("[0030] transfer coind to sc,should pass", async()=>{
+        {
+            let msgData = preGenesisinst.contract.methods.TransferCoinToTarget().encodeABI();
+            let hash = await utils.createApplication(mulSiginst, operator0, preGenesisinst.address, 0, msgData);
             let index = await mulSiginst.getApplicationCount(hash);
-            index = index.toNumber()-1;
+            index = index.toNumber() - 1;
             console.log(index);
 
-            await mulSiginst.signApplication(hash,index,{from:accounts[7]})
-            await mulSiginst.signApplication(hash,index,{from:accounts[8]})
+            await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            await mulSiginst.signApplication(hash, index, {from: accounts[8]});
+        }
 
-
-            console.log("\n\n");
-            let h2opreMineBlance = await h2o.balanceOf(staker1);
-            console.log("h2o preMineBlance=" + h2opreMineBlance);
-
-            let meltpreRecieverBalance = await melt.balanceOf(staker1);
-            console.log("melt prebalance = " + meltpreRecieverBalance);
-
-            // res = await proxy.getbackLeftMiningToken(staker1,{from:accounts[9]});
-            // assert.equal(res.receipt.status,true);
-            res = await utils.testSigViolation("multiSig getback reward token: This tx is aprroved",async function(){
-                await farminst.getbackLeftMiningToken(staker1,{from:operator0});
-            });
-            assert.equal(res,true,"should return false")
-
-            let h2oafterRecieverBalance = await  h2o.balanceOf(staker1);
-            console.log("after h2o mine balance = " + h2oafterRecieverBalance);
-
-            let meltafterRecieverBalance = await  melt.balanceOf(staker1);
-            console.log("after melt mine balance = " + meltafterRecieverBalance);
-
-            let diff = web3.utils.fromWei(h2oafterRecieverBalance) - web3.utils.fromWei(h2opreMineBlance);
-            console.log("h2o getback balance = " + diff);
-
-            diff = web3.utils.fromWei(meltafterRecieverBalance) - web3.utils.fromWei(meltpreRecieverBalance);
-            console.log("melt getback balance = " + diff);
-
-        })
-
-
-    it("[0070] staker2 stake out all,should pass", async()=>{
-        time.increase(200);//2000 sec
-        console.log("\n\n");
-        let preLpBlance = await melt.balanceOf(staker2);
-        console.log("preLpBlance=" + preLpBlance);
-
-        let preStakeBalance = await farminst.totalStakedFor(staker2);
-        console.log("pre sc staked for= " + preStakeBalance);
-
-        let res = await farminst.withdraw(new BN("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16),{from:staker2});
-        console.log(res);
-
+        let preUsdcBal = await usdc.balanceOf(mocksc);
+        console.log("pre usdc balance",preUsdcBal)
+        res = await preGenesisinst.TransferCoinToTarget({from:operator0});
         assert.equal(res.receipt.status,true);
 
-        let afterStakeBalance = await farminst.totalStakedFor(staker2);
-
-        console.log("after sc staked for = " + afterStakeBalance);
-
-        let diff = web3.utils.fromWei(preStakeBalance) - web3.utils.fromWei(afterStakeBalance);
-        console.log("stake balance diff = " + diff);
-
-        let afterLpBlance = await melt.balanceOf(staker2);
-        console.log("afterLpBlance=" + afterLpBlance);
-        let lpdiff = web3.utils.fromWei(afterLpBlance) - web3.utils.fromWei(preLpBlance);
-
-        console.log("staked balance "+diff,"lp balance change ="+lpdiff);
-
-        assert.equal(lpdiff>=web3.utils.fromWei(VAL_1M),true);
+        let afterUsdcBal = await usdc.balanceOf(mocksc);
+        console.log("after usdc balance",afterUsdcBal)
     })
-*/
+
+    it("[0040] user withdraw,should pass", async()=>{
+        let res;
+        try {
+            res = await preGenesisinst.withdraw({from: staker1});
+        }catch(e) {
+            res = false;
+        }
+        assert.equal(res,false);
+
+        {
+            let msgData = preGenesisinst.contract.methods.setWithdrawStatus(true).encodeABI();
+            let hash = await utils.createApplication(mulSiginst, operator0, preGenesisinst.address, 0, msgData);
+            let index = await mulSiginst.getApplicationCount(hash);
+            index = index.toNumber() - 1;
+            console.log(index);
+
+            await mulSiginst.signApplication(hash, index, {from: accounts[7]});
+            await mulSiginst.signApplication(hash, index, {from: accounts[8]});
+        }
+
+        res = await preGenesisinst.setWithdrawStatus(true,{from:operator0});
+        assert.equal(res.receipt.status,true);
+
+       await usdc.mint(preGenesisinst.address,VAL_10M);
+        let preUsdcBal = await usdc.balanceOf(staker1);
+        console.log("staker1 pre usdc balance",preUsdcBal.toString(10))
+
+        res = await preGenesisinst.withdraw({from:staker1});
+        assert.equal(res.receipt.status,true);
+
+        let afterUsdcBal = await usdc.balanceOf(staker1);
+        console.log("staker1 after usdc balance",afterUsdcBal.toString(10))
+    })
 
 })
