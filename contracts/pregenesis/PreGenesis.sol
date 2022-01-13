@@ -25,7 +25,7 @@ contract PreGenesis is PreGenesisData,proxyOwner{
     }
 
     function initContract(address _coin,uint256 _interestRate,uint256 _interestInterval,
-        uint256 _assetCeiling,uint256 _assetFloor)external originOnce{
+        uint256 _assetCeiling,uint256 _assetFloor) external originOnce{
         coin = _coin;
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
@@ -37,7 +37,11 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit InitContract(msg.sender, _coin,_interestRate,_interestInterval,_assetCeiling,_assetFloor);
     }
 
-    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor)external onlyOrigin{
+    function setCoin(address _coin) external onlyOrigin {
+        coin = _coin;
+    }
+
+    function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor) external onlyOrigin{
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
     }
@@ -75,15 +79,15 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit Deposit(msg.sender,msg.sender,amount);
     }
 
-    function transferVCoin(uint256 amount)
+    function transferVCoin(uint256 _vCoinAmount)
         notHalted
         nonReentrant
         settleAccount(targetSc)
         settleAccount(msg.sender)
         external
     {
-        assetInfoMap[msg.sender].assetAndInterest = assetInfoMap[msg.sender].assetAndInterest.sub(amount);
-        assetInfoMap[targetSc].assetAndInterest = assetInfoMap[targetSc].assetAndInterest.sub(amount);
+        assetInfoMap[msg.sender].assetAndInterest = assetInfoMap[msg.sender].assetAndInterest.sub(_vCoinAmount);
+        assetInfoMap[targetSc].assetAndInterest = assetInfoMap[targetSc].assetAndInterest.add(_vCoinAmount);
     }
 
     function withdraw()
@@ -107,12 +111,12 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         emit TransferToTarget(msg.sender,targetSc,coinBal);
     }
 
-    function getVCoinBalance(address account)public view returns(uint256){
-        if(assetInfoMap[account].interestRateOrigin == 0 || interestInterval == 0){
+    function getVCoinBalance(address _user)public view returns(uint256){
+        if(assetInfoMap[_user].interestRateOrigin == 0 || interestInterval == 0){
             return 0;
         }
         uint256 newRate = newAccumulatedRate();
-        return assetInfoMap[account].assetAndInterest.mul(newRate)/assetInfoMap[account].interestRateOrigin;
+        return assetInfoMap[_user].assetAndInterest.mul(newRate)/assetInfoMap[_user].interestRateOrigin;
     }
 
     function getInterestInfo()external view returns(uint256,uint256){
@@ -160,9 +164,6 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         }
     }
 
-    /**
-     * @dev the auxiliary function for _mineSettlementAll.
-     */
     function _interestSettlement()internal{
         uint256 _interestInterval = interestInterval;
         if (_interestInterval>0){
@@ -179,18 +180,12 @@ contract PreGenesis is PreGenesisData,proxyOwner{
         uint256 newRate = rpower(uint256(1e27+interestRate),(currentTime()-latestSettleTime)/interestInterval,rayDecimals);
         return accumulatedRate.mul(newRate)/rayDecimals;
     }
-    /**
-     * @dev settle user's debt balance.
-     * @param account user's account
-     */
+
     function settleUserInterest(address account)internal{
         assetInfoMap[account].assetAndInterest = _settlement(account);
         assetInfoMap[account].interestRateOrigin = accumulatedRate;
     }
-    /**
-     * @dev subfunction, settle user's latest tax amount.
-     * @param account user's account
-     */
+
     function _settlement(address account) internal view returns (uint256) {
         if (assetInfoMap[account].interestRateOrigin == 0){
             return 0;
