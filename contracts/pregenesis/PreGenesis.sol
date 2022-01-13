@@ -7,38 +7,37 @@ import "../modules/IERC20.sol";
 import "../modules/SafeERC20.sol";
 import "./PreGenesisData.sol";
 
-/**
- * @title interest engine.
- * @dev calculate interest by assets,compounded interest.
- *
- */
 contract PreGenesis is PreGenesisData,proxyOwner{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    /**
-     * @dev default function for foundation input miner coins.
-     */
-    constructor (address multiSignature,address origin0,address origin1)
-        proxyOwner(multiSignature,origin0,origin1)
-    public {
 
+    constructor (address _multiSignature,
+                 address _origin0,
+                 address _origin1,
+                 address _coin,
+                 address _targetSc
+                )
+        proxyOwner(_multiSignature, _origin0, _origin1)
+        public
+    {
+        coin = _coin;
+        targetSc = _targetSc;
+        allowWithdraw = false;
+        allowDeposit = false;
     }
 
-    function initContract(address _coin,uint256 _interestRate,uint256 _interestInterval,
+    function initContract(uint256 _interestRate,uint256 _interestInterval,
         uint256 _assetCeiling,uint256 _assetFloor) external originOnce{
-        coin = _coin;
+
         assetCeiling = _assetCeiling;
         assetFloor = _assetFloor;
         _setInterestInfo(_interestRate,_interestInterval,maxRate,rayDecimals);
-
-        allowWithdraw = false;
-        allowDeposit = false;
-
-        emit InitContract(msg.sender, _coin,_interestRate,_interestInterval,_assetCeiling,_assetFloor);
+        emit InitContract(msg.sender,_interestRate,_interestInterval,_assetCeiling,_assetFloor);
     }
 
-    function setCoin(address _coin) external onlyOrigin {
+    function setCoinAndTarget(address _coin,address _targetSc) external onlyOrigin {
         coin = _coin;
+        targetSc = _targetSc;
     }
 
     function setPoolLimitation(uint256 _assetCeiling,uint256 _assetFloor) external onlyOrigin{

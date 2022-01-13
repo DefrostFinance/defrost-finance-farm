@@ -34,7 +34,7 @@ contract PreGenesisData is Halt,ReentrancyGuard {
 
     bool public allowWithdraw;
     bool public allowDeposit;
-    uint256 public maxRate = 12e26;
+    uint256 public maxRate = 2e27;
     uint256 public minRate = rayDecimals;
     address public coin;
     address public targetSc;
@@ -43,7 +43,7 @@ contract PreGenesisData is Halt,ReentrancyGuard {
     event AddAsset(address indexed recieptor,uint256 amount);
     event SubAsset(address indexed account,uint256 amount,uint256 subOrigin);
 
-    event InitContract(address indexed sender,address systemCoin,uint256 interestRate,uint256 interestInterval,
+    event InitContract(address indexed sender,uint256 interestRate,uint256 interestInterval,
         uint256 assetCeiling,uint256 assetFloor);
     event Deposit(address indexed sender, address indexed account, uint256 amount);
     event Withdraw(address indexed sender, address indexed account, uint256 amount);
