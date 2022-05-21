@@ -4,7 +4,7 @@ import "../modules/Operator.sol";
 import "../modules/Halt.sol";
 
 contract AirDropVaultData is Operator,Halt {
-    address public meltToken;
+    address public token;
 
     uint256 public totalWhiteListAirdrop;
     uint256 public totalWhiteListClaimed;
