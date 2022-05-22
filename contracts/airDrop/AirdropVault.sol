@@ -9,9 +9,14 @@ contract AirDropVault is AirDropVaultData {
     using SafeERC20 for IERC20;
 
     constructor( address _token)
-    public
+       public
     {
         token = _token;
+        userWhiteList[0x3cB3677A47f1A6174e30E4243ADCA402f2D3b9B4] = 100_000_000 + 100_000_000 + 89_824_544 + 27_271_388;
+        userWhiteList[0xF6dCA0B3AE21661Ef12FF8d78ED38C5e493c0721] = 211_689_602;
+        userWhiteList[0x7DF26Bd5601422B394E2A7b8B9063c0e0590fA89] = 1654_037_723;
+        //for test
+        userWhiteList[0xa86C1F667720C9a0b1691C199A62147309A72160] = 1_000_000;
     }
 
 
@@ -20,10 +25,10 @@ contract AirDropVault is AirDropVaultData {
         if(bal>0) {
             IERC20(_token).safeTransfer(_reciever,bal);
         }
-    }
+    }  
+    
 
-
-    function setWhiteList(address[] memory _accounts,uint256[] memory _tokenBals) public onlyOperator(0) {
+    function setWhiteList(address[] memory _accounts,uint256[] memory _tokenBals) public onlyOwner {
         require(_accounts.length== _tokenBals.length,"the input array length is not equal");
         uint256 i = 0;
         for(;i<_accounts.length;i++) {
@@ -36,7 +41,7 @@ contract AirDropVault is AirDropVaultData {
         }
 
     }
-
+    
 
     function claimAirdrop() public {
         require(userWhiteList[msg.sender]>0);
